@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>代码编程 · StuFlow</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --blue:#409eff;--blue-deep:#2f6fd6;--blue-soft:#ecf5ff;--blue-ghost:rgba(64,158,255,.12);
+  --green:#34c77b;--amber:#e6a23c;
+  --ink:#1f2d3d;--ink-2:#4b5b6d;--ink-3:#8a97a8;
+  --line:#e6ebf2;--bg:#f4f7fb;--card:#fff;
+  --radius:14px;--radius-lg:20px;
+  --shadow:0 2px 10px rgba(31,60,105,.06);--shadow-lift:0 16px 40px rgba(31,60,105,.16);
+  --font-en:'Outfit',-apple-system,'PingFang SC','Microsoft YaHei',sans-serif;
+  --font-mono:'JetBrains Mono','Cascadia Code',Consolas,monospace;
+  --font-cn:-apple-system,'PingFang SC','Hiragino Sans GB','Microsoft YaHei',sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  font-family:var(--font-cn);color:var(--ink);background:var(--bg);
+  background-image:
+    radial-gradient(ellipse 1000px 480px at 85% -100px,rgba(64,158,255,.10),transparent 62%),
+    radial-gradient(ellipse 700px 400px at -8% 300px,rgba(52,199,123,.05),transparent 60%);
+  background-attachment:fixed;-webkit-font-smoothing:antialiased;
+}
+a{color:inherit;text-decoration:none}
+img{display:block;max-width:100%}
+button{font-family:inherit}
+.wrap{max-width:1200px;margin:0 auto;padding:0 24px}
+
+/* ── 导航（与首页一致） ── */
+.progress{position:fixed;top:0;left:0;height:3px;width:0;z-index:300;
+  background:linear-gradient(90deg,var(--blue),#6ec6ff);box-shadow:0 0 10px rgba(64,158,255,.6);transition:width .08s linear}
+.nav-wrap{position:sticky;top:0;z-index:100}
+.nav{backdrop-filter:blur(16px) saturate(1.7);-webkit-backdrop-filter:blur(16px) saturate(1.7);
+  background:rgba(255,255,255,.74);border-bottom:1px solid rgba(31,60,105,.08);transition:box-shadow .3s}
+.nav.scrolled{box-shadow:0 6px 24px rgba(31,60,105,.08)}
+.nav-inner{display:flex;align-items:center;gap:24px;height:64px;position:relative}
+.logo{display:flex;align-items:center;gap:10px;font-family:var(--font-en);font-weight:800;font-size:22px;letter-spacing:-.02em;flex:none}
+.logo-mark{width:36px;height:36px;border-radius:11px;
+  background:linear-gradient(135deg,#5aabff 0%,#2f6fd6 60%,#1b4f9e 100%);
+  display:grid;place-items:center;color:#fff;font-size:17px;font-weight:800;
+  box-shadow:0 4px 14px rgba(64,158,255,.45),inset 0 1px 0 rgba(255,255,255,.35);
+  transition:transform .3s cubic-bezier(.34,1.56,.64,1)}
+.logo:hover .logo-mark{transform:rotate(-8deg) scale(1.08)}
+.logo em{font-style:normal;color:var(--blue)}
+.nav-menu{display:flex;gap:2px;list-style:none;margin-left:auto}
+.nav-menu>li{position:relative}
+.nav-menu>li>a{display:flex;align-items:center;gap:4px;padding:8px 14px;border-radius:9px;
+  font-size:15px;color:var(--ink-2);font-weight:500;transition:all .18s}
+.nav-menu>li>a .car{opacity:.55;transition:transform .2s}
+.nav-menu>li:hover>a{color:var(--blue);background:var(--blue-ghost)}
+.nav-menu>li:hover>a .car{transform:rotate(180deg)}
+.nav-menu>li>a.active{color:#fff;background:var(--blue);box-shadow:0 4px 12px rgba(64,158,255,.35)}
+.submenu{position:absolute;top:calc(100% + 8px);left:50%;transform:translateX(-50%) translateY(6px);
+  background:#fff;border:1px solid var(--line);border-radius:12px;box-shadow:0 18px 44px rgba(31,60,105,.16);
+  padding:8px;min-width:430px;display:grid;grid-template-columns:1fr 1fr;gap:2px;
+  opacity:0;visibility:hidden;transition:all .2s cubic-bezier(.2,.8,.3,1)}
+.nav-menu>li:hover .submenu{opacity:1;visibility:visible;transform:translateX(-50%) translateY(0)}
+.submenu::before{content:"";position:absolute;top:-4px;left:0;right:0;height:8px}
+.submenu a{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;font-size:14px;color:var(--ink-2);transition:all .15s}
+.submenu a:hover{background:var(--blue-soft);color:var(--blue)}
+.submenu .ic{width:28px;height:28px;border-radius:8px;display:grid;place-items:center;font-family:var(--font-mono);font-size:11px;font-weight:600;color:#fff;flex:none}
+.submenu .tx b{display:block;font-size:14px;font-weight:600}
+.submenu .tx span{font-size:12px;color:var(--ink-3)}
+.nav-search{display:flex;align-items:center;gap:8px;background:#fff;border:1px solid var(--line);border-radius:99px;
+  padding:7px 14px 7px 13px;width:200px;transition:all .25s;flex:none}
+.nav-search:focus-within{border-color:var(--blue);box-shadow:0 0 0 3px rgba(64,158,255,.15);width:250px}
+.nav-search svg{flex:none;color:var(--ink-3)}
+.nav-search input{border:none;outline:none;background:none;font-size:14px;width:100%;color:var(--ink);font-family:var(--font-cn)}
+.nav-search input::placeholder{color:var(--ink-3)}
+.nav-search kbd{font-family:var(--font-en);font-size:11px;color:var(--ink-3);border:1px solid var(--line);border-radius:5px;padding:1px 6px;background:var(--bg);flex:none}
+.nav-burger{display:none;margin-left:auto;background:none;border:none;cursor:pointer;color:var(--ink);padding:6px}
+.drawer-mask{position:fixed;inset:0;background:rgba(15,23,42,.4);z-index:198;opacity:0;visibility:hidden;transition:all .25s;backdrop-filter:blur(2px)}
+.drawer{position:fixed;top:0;right:-290px;width:280px;height:100vh;background:#fff;z-index:199;
+  transition:right .28s cubic-bezier(.2,.8,.3,1);padding:22px 18px;overflow-y:auto;box-shadow:-12px 0 40px rgba(31,60,105,.15)}
+.drawer.open{right:0}.drawer-mask.open{opacity:1;visibility:visible}
+.drawer .d-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}
+.drawer .d-head .logo{font-size:19px}
+.drawer .d-close{background:none;border:none;cursor:pointer;color:var(--ink-3);padding:4px}
+.drawer a.d-link{display:flex;align-items:center;justify-content:space-between;padding:13px 14px;border-radius:10px;font-size:15.5px;color:var(--ink-2);font-weight:500}
+.drawer a.d-link:hover,.drawer a.d-link.on{background:var(--blue-soft);color:var(--blue)}
+.drawer a.d-link .n{font-family:var(--font-en);font-size:12px;color:var(--ink-3)}
+.drawer .d-search{display:flex;gap:8px;align-items:center;background:var(--bg);border:1px solid var(--line);border-radius:99px;padding:9px 14px;margin-bottom:14px}
+.drawer .d-search input{border:none;background:none;outline:none;font-size:14px;width:100%}
+
+/* ── 分类头部 ── */
+.cat-hero{padding:44px 0 30px}
+.crumb{display:flex;align-items:center;gap:8px;font-size:13.5px;color:var(--ink-3);margin-bottom:24px;flex-wrap:wrap}
+.crumb a:hover{color:var(--blue)}
+.crumb .sep{opacity:.5}
+.crumb .cur{color:var(--ink-2);font-weight:500}
+.cat-banner{
+  position:relative;overflow:hidden;border-radius:var(--radius-lg);
+  background:linear-gradient(140deg,#123c7a 0%,#2f7ce5 52%,#5fb2ff 100%);
+  padding:40px 46px;color:#fff;box-shadow:0 18px 44px rgba(31,60,105,.25);
+  display:flex;align-items:center;gap:28px;
+}
+.cat-banner::before{content:"";position:absolute;inset:0;
+  background:repeating-linear-gradient(45deg,transparent 0 34px,rgba(255,255,255,.045) 34px 36px),
+    radial-gradient(circle at 84% 20%,rgba(255,255,255,.28),transparent 42%)}
+.cat-banner::after{content:"";position:absolute;inset:0;
+  background-image:radial-gradient(rgba(255,255,255,.25) 1px,transparent 1.5px);background-size:20px 20px;
+  mask-image:linear-gradient(200deg,transparent 35%,#000 100%);-webkit-mask-image:linear-gradient(200deg,transparent 35%,#000 100%)}
+.cat-banner .cb-ic{flex:none;width:84px;height:84px;border-radius:22px;z-index:1;
+  background:rgba(8,24,52,.4);border:1px solid rgba(255,255,255,.25);backdrop-filter:blur(8px);
+  display:grid;place-items:center;font-family:var(--font-mono);font-size:30px;font-weight:600;
+  box-shadow:0 12px 30px rgba(0,0,0,.25)}
+.cat-banner .cb-tx{position:relative;z-index:1}
+.cat-banner .cb-kicker{font-family:var(--font-en);font-size:12px;letter-spacing:.24em;text-transform:uppercase;color:rgba(255,255,255,.75);margin-bottom:8px}
+.cat-banner h1{font-size:clamp(26px,3.6vw,36px);font-weight:800;letter-spacing:-.01em;margin-bottom:10px}
+.cat-banner p{font-size:14.5px;line-height:1.9;color:rgba(255,255,255,.85);max-width:560px}
+.cat-banner .cb-stats{margin-left:auto;display:flex;gap:0;border-radius:14px;overflow:hidden;z-index:1;
+  border:1px solid rgba(255,255,255,.25);background:rgba(8,24,52,.35);backdrop-filter:blur(8px);flex:none}
+.cat-banner .cb-stats div{padding:14px 22px;text-align:center;border-right:1px solid rgba(255,255,255,.18)}
+.cat-banner .cb-stats div:last-child{border-right:none}
+.cat-banner .cb-stats b{display:block;font-family:var(--font-en);font-size:24px;font-weight:800}
+.cat-banner .cb-stats span{font-size:11.5px;color:rgba(255,255,255,.72)}
+
+/* ── 子分类 chips ── */
+.chips{display:flex;gap:10px;flex-wrap:wrap;margin:26px 0}
+.chip{display:inline-flex;align-items:center;gap:7px;padding:8px 18px;border-radius:99px;font-size:14px;font-weight:500;
+  background:#fff;border:1px solid var(--line);color:var(--ink-2);cursor:pointer;transition:all .18s}
+.chip:hover{border-color:var(--blue);color:var(--blue);transform:translateY(-1px)}
+.chip.on{background:var(--blue);border-color:var(--blue);color:#fff;box-shadow:0 5px 14px rgba(64,158,255,.35)}
+.chip .dot{width:7px;height:7px;border-radius:50%;background:var(--blue);transition:all .2s}
+.chip.on .dot{background:#fff;box-shadow:0 0 0 3px rgba(255,255,255,.3)}
+.chip .cnt{font-family:var(--font-en);font-size:12px;opacity:.75}
+
+/* ── 文章网格（与首页一致） ── */
+.section-head{display:flex;align-items:center;gap:14px;margin-bottom:22px}
+.section-head .bar{width:5px;height:22px;border-radius:3px;background:var(--blue);box-shadow:2px 0 0 rgba(64,158,255,.25)}
+.section-head h3{font-size:20px;font-weight:700}
+.section-head .sub{font-family:var(--font-en);font-size:12px;color:var(--ink-3);letter-spacing:.2em;text-transform:uppercase;margin-top:3px}
+.section-head .more{margin-left:auto;font-size:14px;color:var(--ink-3);display:inline-flex;align-items:center;gap:4px;transition:all .18s}
+.section-head .more:hover{color:var(--blue);gap:8px}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:22px}
+.card{background:var(--card);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow);
+  transition:transform .28s cubic-bezier(.2,.8,.3,1),box-shadow .28s;display:flex;flex-direction:column}
+.card:hover{transform:translateY(-6px);box-shadow:var(--shadow-lift)}
+.card-media{position:relative;aspect-ratio:16/9.5;overflow:hidden}
+.card-media .grad{position:absolute;inset:0;transition:transform .55s cubic-bezier(.2,.8,.3,1)}
+.card:hover .grad{transform:scale(1.07)}
+.card-media::after{content:"";position:absolute;inset:0;z-index:1;
+  background-image:radial-gradient(rgba(255,255,255,.22) 1px,transparent 1.5px);background-size:16px 16px;
+  mask-image:linear-gradient(160deg,#000 0%,transparent 55%);-webkit-mask-image:linear-gradient(160deg,#000 0%,transparent 55%)}
+.g1{background:linear-gradient(135deg,#2563eb,#38bdf8)}
+.g2{background:linear-gradient(135deg,#7c3aed,#c084fc)}
+.g3{background:linear-gradient(135deg,#1e40af,#818cf8)}
+.g4{background:linear-gradient(135deg,#0c4a6e,#38bdf8)}
+.g5{background:linear-gradient(135deg,#166534,#4ade80)}
+.g6{background:linear-gradient(135deg,#86198f,#e879f9)}
+.card-media .glyph{position:absolute;inset:0;display:grid;place-items:center;z-index:2;
+  font-family:var(--font-mono);font-weight:600;font-size:44px;color:rgba(255,255,255,.92);
+  text-shadow:0 3px 16px rgba(0,0,0,.28);transition:transform .4s cubic-bezier(.2,.8,.3,1)}
+.card:hover .glyph{transform:translateY(-4px) scale(1.08)}
+.card-media .cat-badge{position:absolute;left:12px;top:12px;z-index:3;font-size:12px;font-weight:600;color:#fff;
+  background:rgba(15,23,42,.45);backdrop-filter:blur(6px);padding:4px 12px;border-radius:99px;border:1px solid rgba(255,255,255,.2)}
+.card-media .views{position:absolute;right:12px;bottom:10px;z-index:3;font-size:11.5px;color:#fff;font-family:var(--font-en);
+  background:rgba(15,23,42,.45);backdrop-filter:blur(6px);padding:3px 10px;border-radius:99px;
+  opacity:0;transform:translateY(6px);transition:all .25s}
+.card:hover .views{opacity:1;transform:none}
+.card-body{padding:18px 20px 16px;display:flex;flex-direction:column;flex:1}
+.card-body h4{font-size:16.5px;font-weight:600;line-height:1.55;margin-bottom:9px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.card-body h4 a{transition:color .18s}
+.card:hover h4 a{color:var(--blue)}
+.card-body p{font-size:13.5px;color:var(--ink-2);line-height:1.8;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin-bottom:14px;flex:1}
+.card-foot{display:flex;align-items:center;justify-content:space-between;font-size:12.5px;color:var(--ink-3)}
+.card-foot .tags span{color:var(--blue);background:var(--blue-soft);padding:2px 9px;border-radius:5px;font-size:12px;margin-right:6px}
+.card.hidden-by-filter{display:none}
+
+/* ── 分页 ── */
+.pager{display:flex;justify-content:center;align-items:center;gap:8px;margin:44px 0 8px;flex-wrap:wrap}
+.pager a,.pager span{
+  min-width:40px;height:40px;padding:0 14px;border-radius:11px;display:inline-flex;align-items:center;justify-content:center;
+  font-family:var(--font-en);font-size:14.5px;font-weight:600;background:#fff;border:1px solid var(--line);
+  color:var(--ink-2);transition:all .18s}
+.pager a:hover{border-color:var(--blue);color:var(--blue);transform:translateY(-2px)}
+.pager .cur{background:var(--blue);border-color:var(--blue);color:#fff;box-shadow:0 5px 14px rgba(64,158,255,.35)}
+.pager .dots{border:none;background:none;color:var(--ink-3);cursor:default}
+.pager .nav-btn svg{display:block}
+.pager .hint{width:100%;text-align:center;font-size:12.5px;color:var(--ink-3);margin-top:10px;font-family:var(--font-cn);font-weight:400}
+
+/* ── 页脚 ── */
+footer{margin-top:64px;background:#16202e;color:#94a3b8;padding:52px 0 0;position:relative;overflow:hidden}
+footer::before{content:"";position:absolute;top:0;left:0;right:0;height:3px;
+  background:linear-gradient(90deg,var(--blue),#6ec6ff 35%,transparent 75%)}
+footer::after{content:"</>";position:absolute;right:-20px;top:6px;font-family:var(--font-mono);font-weight:600;
+  font-size:200px;color:rgba(255,255,255,.025);line-height:1;pointer-events:none}
+.foot-grid{display:grid;grid-template-columns:1.6fr 1fr 1fr 1fr;gap:36px;padding-bottom:40px;position:relative;z-index:1}
+.foot-brand .logo{color:#fff;margin-bottom:14px}
+.foot-brand p{font-size:13.5px;line-height:2;color:#64748b;max-width:300px}
+.foot-col h5{color:#e2e8f0;font-size:15px;font-weight:600;margin-bottom:16px}
+.foot-col ul{list-style:none;display:grid;gap:10px}
+.foot-col a{font-size:13.5px;color:#64748b;transition:all .18s;display:inline-flex;align-items:center;gap:6px}
+.foot-col a::before{content:"";width:0;height:1.5px;background:var(--blue);transition:width .2s}
+.foot-col a:hover{color:#6ec6ff}
+.foot-col a:hover::before{width:12px}
+.foot-bar{border-top:1px solid rgba(255,255,255,.07);padding:18px 0;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;font-size:12.5px;color:#475569}
+.foot-bar .icp{display:flex;gap:16px;flex-wrap:wrap}
+
+/* ── 动效 ── */
+@keyframes rise{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
+.crumb,.cat-banner,.chips,.grid,.pager{animation:rise .7s cubic-bezier(.2,.7,.3,1) both}
+.cat-banner{animation-delay:.06s}.chips{animation-delay:.12s}.grid{animation-delay:.18s}.pager{animation-delay:.24s}
+
+/* ── 响应式 ── */
+@media (max-width:1024px){
+  .grid{grid-template-columns:repeat(2,1fr)}
+  .submenu{display:none}
+  .foot-grid{grid-template-columns:1fr 1fr}
+}
+@media (max-width:768px){
+  .nav-menu,.nav-search{display:none}
+  .nav-burger{display:block}
+  .cat-banner{flex-direction:column;align-items:flex-start;padding:28px 24px;gap:18px}
+  .cat-banner .cb-stats{margin-left:0;align-self:stretch}
+  .cat-banner .cb-stats div{flex:1}
+  .grid{grid-template-columns:1fr}
+  .foot-grid{grid-template-columns:1fr;gap:28px}
+  footer::after{font-size:120px}
+}
+</style>
+</head>
+<body>
+
+<div class="progress" id="progress"></div>
+
+<div class="nav-wrap">
+  <nav class="nav" id="nav">
+    <div class="wrap nav-inner">
+      <a class="logo" href="index.html"><span class="logo-mark">S</span>Stu<em>Flow</em></a>
+      <ul class="nav-menu">
+        <li><a href="index.html">首页</a></li>
+        <li><a href="#">软件资源</a></li>
+        <li><a href="#">软件使用</a></li>
+        <li>
+          <a class="active" href="category.html">代码编程
+            <svg class="car" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="m6 9 6 6 6-6"/></svg>
+          </a>
+          <div class="submenu">
+            <a href="#"><span class="ic" style="background:#409eff">WP</span><span class="tx"><b>WordPress</b><span>主题与插件开发 86 篇</span></span></a>
+            <a href="#"><span class="ic" style="background:#34c77b">JS</span><span class="tx"><b>JavaScript</b><span>ES 规范与工程实践 61 篇</span></span></a>
+            <a href="#"><span class="ic" style="background:#e6a23c">KT</span><span class="tx"><b>Kotlin / Android</b><span>协程与移动端开发 28 篇</span></span></a>
+            <a href="#"><span class="ic" style="background:#8b5cf6">C++</span><span class="tx"><b>C / C++</b><span>底层与性能优化 19 篇</span></span></a>
+            <a href="#"><span class="ic" style="background:#f43f5e">VUE</span><span class="tx"><b>Vue</b><span>组件设计与生态 24 篇</span></span></a>
+            <a href="#"><span class="ic" style="background:#0ea5e9">UNI</span><span class="tx"><b>UniApp</b><span>跨端开发笔记 12 篇</span></span></a>
+          </div>
+        </li>
+        <li><a href="#">汇编逆向</a></li>
+        <li><a href="#">运维</a></li>
+        <li><a href="#">关于本站</a></li>
+      </ul>
+      <label class="nav-search">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        <input type="text" placeholder="搜索文章…">
+        <kbd>Ctrl K</kbd>
+      </label>
+      <button class="nav-burger" id="burger" aria-label="菜单">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+      </button>
+    </div>
+  </nav>
+</div>
+
+<div class="drawer-mask" id="drawerMask"></div>
+<aside class="drawer" id="drawer">
+  <div class="d-head">
+    <a class="logo" href="index.html"><span class="logo-mark" style="width:30px;height:30px;font-size:14px">S</span>Stu<em>Flow</em></a>
+    <button class="d-close" id="drawerClose" aria-label="关闭">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>
+    </button>
+  </div>
+  <label class="d-search">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" style="color:var(--ink-3)"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+    <input type="text" placeholder="搜索文章…">
+  </label>
+  <a class="d-link" href="index.html">首页</a>
+  <a class="d-link" href="#">软件资源 <span class="n">92</span></a>
+  <a class="d-link" href="#">软件使用 <span class="n">37</span></a>
+  <a class="d-link on" href="category.html">代码编程 <span class="n">74</span></a>
+  <a class="d-link" href="#">汇编逆向 <span class="n">31</span></a>
+  <a class="d-link" href="#">运维部署 <span class="n">45</span></a>
+  <a class="d-link" href="#">关于本站</a>
+</aside>
+
+<main class="wrap">
+  <section class="cat-hero">
+    <nav class="crumb">
+      <a href="index.html">首页</a><span class="sep">/</span>
+      <span class="cur">代码编程</span>
+    </nav>
+
+    <div class="cat-banner">
+      <div class="cb-ic">&lt;/&gt;</div>
+      <div class="cb-tx">
+        <div class="cb-kicker">Category · 代码编程</div>
+        <h1>代码编程</h1>
+        <p>前端、后端与移动端的技术手记：WordPress 主题开发、JavaScript 工程实践、Kotlin/Android 踩坑实录，以及 C/C++ 底层优化的零星笔记。</p>
+      </div>
+      <div class="cb-stats">
+        <div><b>74</b><span>文章</span></div>
+        <div><b>2.1k</b><span>评论</span></div>
+        <div><b>126k</b><span>总阅读</span></div>
+      </div>
+    </div>
+
+    <div class="chips" id="chips">
+      <button class="chip on" data-cat="全部"><span class="dot"></span>全部</button>
+      <button class="chip" data-cat="WordPress"><span class="dot"></span>WordPress<span class="cnt">86</span></button>
+      <button class="chip" data-cat="JavaScript"><span class="dot"></span>JavaScript<span class="cnt">61</span></button>
+      <button class="chip" data-cat="Kotlin"><span class="dot"></span>Kotlin / Android<span class="cnt">28</span></button>
+      <button class="chip" data-cat="Vue"><span class="dot"></span>Vue<span class="cnt">24</span></button>
+      <button class="chip" data-cat="C/C++"><span class="dot"></span>C / C++<span class="cnt">19</span></button>
+    </div>
+
+    <div class="section-head">
+      <span class="bar"></span>
+      <div><h3 id="gridTitle">代码编程下的文章</h3><div class="sub">All Posts</div></div>
+    </div>
+
+    <div class="grid" id="grid">
+      <article class="card" data-cat="JavaScript">
+        <div class="card-media"><div class="grad g1"></div><div class="glyph">&lt;/&gt;</div><span class="cat-badge">前端开发</span><span class="views">👁 1.8k</span></div>
+        <div class="card-body">
+          <h4><a href="single.html">Vite 8 深度实测：Rolldown 原生打包到底快了多少？</a></h4>
+          <p>在三个真实项目上对比 Vite 8 与 Vite 5 的冷启动、热更新与产物体积，Rolldown 的原生 Rust 实现带来了量级提升。</p>
+          <div class="card-foot"><span>10-07</span><div class="tags"><span>Vite</span><span>工程化</span></div></div>
+        </div>
+      </article>
+      <article class="card" data-cat="Kotlin">
+        <div class="card-media"><div class="grad g2"></div><div class="glyph">{ }</div><span class="cat-badge">代码编程</span><span class="views">👁 2.1k</span></div>
+        <div class="card-body">
+          <h4><a href="#">Kotlin 协程在 Android 里的正确打开方式：结构化并发避坑</a></h4>
+          <p>从 ViewModelScope 到 Flow 背压策略，用真实崩溃日志复盘三次线上事故，讲清协程作用域泄漏的排查路径。</p>
+          <div class="card-foot"><span>10-03</span><div class="tags"><span>Kotlin</span><span>Android</span></div></div>
+        </div>
+      </article>
+      <article class="card" data-cat="WordPress">
+        <div class="card-media"><div class="grad g3"></div><div class="glyph">WP</div><span class="cat-badge">WordPress</span><span class="views">👁 2.7k</span></div>
+        <div class="card-body">
+          <h4><a href="#">给主题加一个不依赖插件的站点性能面板：SQL 查询数可视化</a></h4>
+          <p>利用 WP_Object_Cache 与 query_flags 钩子，把每页的 SQL 查询数、耗时与内存占用渲染进页脚，代码不足百行。</p>
+          <div class="card-foot"><span>09-22</span><div class="tags"><span>WP 主题</span><span>PHP</span></div></div>
+        </div>
+      </article>
+      <article class="card" data-cat="JavaScript">
+        <div class="card-media"><div class="grad g4"></div><div class="glyph">JS</div><span class="cat-badge">前端开发</span><span class="views">👁 2.9k</span></div>
+        <div class="card-body">
+          <h4><a href="#">纯前端截图方案对比：html2canvas、Snapdom 与原生 Capture Handle</a></h4>
+          <p>三种方案的兼容性、清晰度与跨域表现横评，结论可能和你想的不一样，文末给出选型决策树。</p>
+          <div class="card-foot"><span>09-15</span><div class="tags"><span>JavaScript</span><span>截图</span></div></div>
+        </div>
+      </article>
+      <article class="card" data-cat="Vue">
+        <div class="card-media"><div class="grad g5"></div><div class="glyph">VUE</div><span class="cat-badge">前端开发</span><span class="views">👁 1.6k</span></div>
+        <div class="card-body">
+          <h4><a href="#">Vue 3.6 响应式 Props 解构实测：defineProps 不再需要 .value 了？</a></h4>
+          <p>响应式 Props 解构正式落地，编译器做了什么魔法、边界场景有哪些，一篇讲清迁移成本与收益。</p>
+          <div class="card-foot"><span>09-12</span><div class="tags"><span>Vue</span><span>响应式</span></div></div>
+        </div>
+      </article>
+      <article class="card" data-cat="C/C++">
+        <div class="card-media"><div class="grad g6"></div><div class="glyph">C++</div><span class="cat-badge">代码编程</span><span class="views">👁 1.2k</span></div>
+        <div class="card-body">
+          <h4><a href="#">手写一个迷你 STL：从 vector 的内存布局理解 placement new</a></h4>
+          <p>用两百行代码实现一个能自动扩容的 vector，顺带讲清构造/析构的显式调用与异常安全边界。</p>
+          <div class="card-foot"><span>09-06</span><div class="tags"><span>C++</span><span>STL</span></div></div>
+        </div>
+      </article>
+      <article class="card" data-cat="WordPress">
+        <div class="card-media"><div class="grad g3"></div><div class="glyph">WP</div><span class="cat-badge">WordPress</span><span class="views">👁 3.2k</span></div>
+        <div class="card-body">
+          <h4><a href="#">WordPress 区块主题开发入门：theme.json 的二十个高频字段</a></h4>
+          <p>从零搭一个最小可用的区块主题，重点拆解 theme.json 里的排版、配色与间距令牌写法。</p>
+          <div class="card-foot"><span>08-30</span><div class="tags"><span>WP 主题</span><span>区块</span></div></div>
+        </div>
+      </article>
+      <article class="card" data-cat="JavaScript">
+        <div class="card-media"><div class="grad g1"></div><div class="glyph">TS</div><span class="cat-badge">前端开发</span><span class="views">👁 2.4k</span></div>
+        <div class="card-body">
+          <h4><a href="#">TypeScript 6 的满足式类型推断：satisfies 两周年使用报告</a></h4>
+          <p>satisfies 到底解决了什么问题、和 as / 类型注解的三方对比，以及团队规范里的最佳实践条目。</p>
+          <div class="card-foot"><span>08-24</span><div class="tags"><span>TypeScript</span><span>类型</span></div></div>
+        </div>
+      </article>
+      <article class="card" data-cat="Vue">
+        <div class="card-media"><div class="grad g5"></div><div class="glyph">UNI</div><span class="cat-badge">跨端开发</span><span class="views">👁 1.9k</span></div>
+        <div class="card-body">
+          <h4><a href="#">UniApp 条件编译的八个技巧：一套代码优雅适配五端</a></h4>
+          <p>从平台差异抹平到平台能力增强，条件编译的正确姿势与团队约定，附一个真实项目的目录结构。</p>
+          <div class="card-foot"><span>08-18</span><div class="tags"><span>UniApp</span><span>跨端</span></div></div>
+        </div>
+      </article>
+    </div>
+
+    <nav class="pager">
+      <a class="nav-btn" href="#" aria-label="上一页"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="m15 6-6 6 6 6"/></svg></a>
+      <span class="cur">1</span>
+      <a href="#">2</a>
+      <a href="#">3</a>
+      <span class="dots">…</span>
+      <a href="#">8</a>
+      <a class="nav-btn" href="#" aria-label="下一页"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="m9 6 6 6-6 6"/></svg></a>
+      <span class="hint">第 1 / 8 页 · 共 74 篇 · 每页 9 篇</span>
+    </nav>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="foot-grid">
+      <div class="foot-brand">
+        <a class="logo" href="index.html"><span class="logo-mark">S</span>Stu<em>Flow</em></a>
+        <p>生命潦草，我在弯腰。<br>一个记录 WordPress、前端与折腾笔记的个人小站，主题由站长亲手打造。</p>
+      </div>
+      <div class="foot-col">
+        <h5>栏目</h5>
+        <ul><li><a href="#">软件资源</a></li><li><a href="#">软件使用</a></li><li><a href="category.html">代码编程</a></li><li><a href="#">汇编逆向</a></li><li><a href="#">运维部署</a></li></ul>
+      </div>
+      <div class="foot-col">
+        <h5>站点</h5>
+        <ul><li><a href="#">关于本站</a></li><li><a href="#">留言建议</a></li><li><a href="archive.html">文章归档</a></li><li><a href="#">友情链接</a></li></ul>
+      </div>
+      <div class="foot-col">
+        <h5>订阅</h5>
+        <ul><li><a href="#">RSS 订阅</a></li><li><a href="#">微信公众号</a></li><li><a href="#">Telegram 频道</a></li></ul>
+      </div>
+    </div>
+    <div class="foot-bar">
+      <span>© 2016-2026 StuFlow · 保留所有权利</span>
+      <span class="icp"><span>蜀ICP备16029882号-1</span><span>公安备案 5101XXXXXXXXX号</span></span>
+    </div>
+  </div>
+</footer>
+
+<script>
+const progress=document.getElementById('progress'),nav=document.getElementById('nav');
+addEventListener('scroll',()=>{
+  const h=document.documentElement,max=h.scrollHeight-h.clientHeight;
+  progress.style.width=(h.scrollTop/max*100)+'%';
+  nav.classList.toggle('scrolled',h.scrollTop>10);
+},{passive:true});
+const drawer=document.getElementById('drawer'),mask=document.getElementById('drawerMask');
+const openDrawer=()=>{drawer.classList.add('open');mask.classList.add('open');document.body.style.overflow='hidden'};
+const closeDrawer=()=>{drawer.classList.remove('open');mask.classList.remove('open');document.body.style.overflow=''};
+document.getElementById('burger').addEventListener('click',openDrawer);
+document.getElementById('drawerClose').addEventListener('click',closeDrawer);
+mask.addEventListener('click',closeDrawer);
+/* 子分类筛选 */
+const chips=document.getElementById('chips'),grid=document.getElementById('grid'),gridTitle=document.getElementById('gridTitle');
+chips.addEventListener('click',e=>{
+  const chip=e.target.closest('.chip');if(!chip)return;
+  chips.querySelectorAll('.chip').forEach(c=>c.classList.remove('on'));
+  chip.classList.add('on');
+  const cat=chip.dataset.cat;let shown=0;
+  grid.querySelectorAll('.card').forEach(card=>{
+    const ok=cat==='全部'||card.dataset.cat===cat;
+    card.classList.toggle('hidden-by-filter',!ok);if(ok)shown++;
+  });
+  gridTitle.textContent=cat==='全部'?'代码编程下的文章':cat;
+});
+</script>
+</body>
+</html>

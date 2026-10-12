@@ -1,0 +1,906 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vite 8 深度实测：Rolldown 原生打包到底快了多少？ · StuFlow</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --blue:#409eff;
+  --blue-deep:#2f6fd6;
+  --blue-soft:#ecf5ff;
+  --blue-ghost:rgba(64,158,255,.12);
+  --green:#34c77b;
+  --amber:#e6a23c;
+  --ink:#1f2d3d;
+  --ink-2:#4b5b6d;
+  --ink-3:#8a97a8;
+  --line:#e6ebf2;
+  --bg:#f4f7fb;
+  --card:#ffffff;
+  --radius:14px;
+  --radius-lg:20px;
+  --shadow:0 2px 10px rgba(31,60,105,.06);
+  --shadow-lift:0 16px 40px rgba(31,60,105,.16);
+  --font-en:'Outfit',-apple-system,'PingFang SC','Microsoft YaHei',sans-serif;
+  --font-mono:'JetBrains Mono','Cascadia Code',Consolas,monospace;
+  --font-cn:-apple-system,'PingFang SC','Hiragino Sans GB','Microsoft YaHei',sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:90px}
+body{
+  font-family:var(--font-cn);color:var(--ink);background:var(--bg);
+  background-image:
+    radial-gradient(ellipse 1000px 480px at 85% -100px, rgba(64,158,255,.10), transparent 62%),
+    radial-gradient(ellipse 700px 400px at -8% 500px, rgba(52,199,123,.05), transparent 60%);
+  background-attachment:fixed;
+  -webkit-font-smoothing:antialiased;
+}
+a{color:inherit;text-decoration:none}
+img{display:block;max-width:100%}
+button{font-family:inherit}
+.wrap{max-width:1200px;margin:0 auto;padding:0 24px}
+
+/* ───────── 顶部进度条 ───────── */
+.progress{position:fixed;top:0;left:0;height:3px;width:0;z-index:300;
+  background:linear-gradient(90deg,var(--blue),#6ec6ff);box-shadow:0 0 10px rgba(64,158,255,.6);
+  transition:width .08s linear}
+
+/* ───────── 导航（与首页一致） ───────── */
+.nav-wrap{position:sticky;top:0;z-index:100}
+.nav{
+  backdrop-filter:blur(16px) saturate(1.7);
+  -webkit-backdrop-filter:blur(16px) saturate(1.7);
+  background:rgba(255,255,255,.74);
+  border-bottom:1px solid rgba(31,60,105,.08);
+  transition:box-shadow .3s;
+}
+.nav.scrolled{box-shadow:0 6px 24px rgba(31,60,105,.08)}
+.nav-inner{display:flex;align-items:center;gap:24px;height:64px;position:relative}
+.logo{display:flex;align-items:center;gap:10px;font-family:var(--font-en);font-weight:800;font-size:22px;letter-spacing:-.02em;flex:none}
+.logo-mark{
+  width:36px;height:36px;border-radius:11px;position:relative;overflow:hidden;
+  background:linear-gradient(135deg,#5aabff 0%,#2f6fd6 60%,#1b4f9e 100%);
+  display:grid;place-items:center;color:#fff;font-size:17px;font-weight:800;
+  box-shadow:0 4px 14px rgba(64,158,255,.45), inset 0 1px 0 rgba(255,255,255,.35);
+  transition:transform .3s cubic-bezier(.34,1.56,.64,1);
+}
+.logo:hover .logo-mark{transform:rotate(-8deg) scale(1.08)}
+.logo em{font-style:normal;color:var(--blue)}
+.nav-menu{display:flex;gap:2px;list-style:none;margin-left:auto}
+.nav-menu>li{position:relative}
+.nav-menu>li>a{
+  display:flex;align-items:center;gap:4px;padding:8px 14px;border-radius:9px;
+  font-size:15px;color:var(--ink-2);font-weight:500;transition:all .18s;
+}
+.nav-menu>li>a .car{opacity:.55;transition:transform .2s}
+.nav-menu>li:hover>a{color:var(--blue);background:var(--blue-ghost)}
+.nav-menu>li:hover>a .car{transform:rotate(180deg)}
+.nav-menu>li>a.active{color:#fff;background:var(--blue);box-shadow:0 4px 12px rgba(64,158,255,.35)}
+.submenu{
+  position:absolute;top:calc(100% + 8px);left:50%;transform:translateX(-50%) translateY(6px);
+  background:#fff;border:1px solid var(--line);border-radius:12px;box-shadow:0 18px 44px rgba(31,60,105,.16);
+  padding:8px;min-width:430px;display:grid;grid-template-columns:1fr 1fr;gap:2px;
+  opacity:0;visibility:hidden;transition:all .2s cubic-bezier(.2,.8,.3,1);
+}
+.nav-menu>li:hover .submenu{opacity:1;visibility:visible;transform:translateX(-50%) translateY(0)}
+.submenu::before{content:"";position:absolute;top:-4px;left:0;right:0;height:8px}
+.submenu a{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;font-size:14px;color:var(--ink-2);transition:all .15s}
+.submenu a:hover{background:var(--blue-soft);color:var(--blue)}
+.submenu .ic{width:28px;height:28px;border-radius:8px;display:grid;place-items:center;font-family:var(--font-mono);font-size:11px;font-weight:600;color:#fff;flex:none}
+.submenu .tx b{display:block;font-size:14px;font-weight:600}
+.submenu .tx span{font-size:12px;color:var(--ink-3)}
+.nav-search{
+  display:flex;align-items:center;gap:8px;background:#fff;border:1px solid var(--line);border-radius:99px;
+  padding:7px 14px 7px 13px;width:200px;transition:all .25s;flex:none;
+}
+.nav-search:focus-within{border-color:var(--blue);box-shadow:0 0 0 3px rgba(64,158,255,.15);width:250px}
+.nav-search svg{flex:none;color:var(--ink-3)}
+.nav-search input{border:none;outline:none;background:none;font-size:14px;width:100%;color:var(--ink);font-family:var(--font-cn)}
+.nav-search input::placeholder{color:var(--ink-3)}
+.nav-search kbd{font-family:var(--font-en);font-size:11px;color:var(--ink-3);border:1px solid var(--line);border-radius:5px;padding:1px 6px;background:var(--bg);flex:none}
+.nav-burger{display:none;margin-left:auto;background:none;border:none;cursor:pointer;color:var(--ink);padding:6px}
+.drawer-mask{position:fixed;inset:0;background:rgba(15,23,42,.4);z-index:198;opacity:0;visibility:hidden;transition:all .25s;backdrop-filter:blur(2px)}
+.drawer{
+  position:fixed;top:0;right:-290px;width:280px;height:100vh;background:#fff;z-index:199;
+  transition:right .28s cubic-bezier(.2,.8,.3,1);padding:22px 18px;overflow-y:auto;
+  box-shadow:-12px 0 40px rgba(31,60,105,.15);
+}
+.drawer.open{right:0}
+.drawer-mask.open{opacity:1;visibility:visible}
+.drawer .d-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}
+.drawer .d-head .logo{font-size:19px}
+.drawer .d-close{background:none;border:none;cursor:pointer;color:var(--ink-3);padding:4px}
+.drawer a.d-link{display:flex;align-items:center;justify-content:space-between;padding:13px 14px;border-radius:10px;font-size:15.5px;color:var(--ink-2);font-weight:500}
+.drawer a.d-link:hover,.drawer a.d-link.on{background:var(--blue-soft);color:var(--blue)}
+.drawer a.d-link .n{font-family:var(--font-en);font-size:12px;color:var(--ink-3)}
+.drawer .d-search{display:flex;gap:8px;align-items:center;background:var(--bg);border:1px solid var(--line);border-radius:99px;padding:9px 14px;margin-bottom:14px}
+.drawer .d-search input{border:none;background:none;outline:none;font-size:14px;width:100%}
+
+/* ───────── 文章主体区 ───────── */
+.article-layout{max-width:1200px;margin:0 auto;padding:36px 24px 0;display:grid;grid-template-columns:minmax(0,780px) 250px;gap:46px;justify-content:center}
+
+/* 面包屑 */
+.crumb{display:flex;align-items:center;gap:8px;font-size:13.5px;color:var(--ink-3);margin-bottom:22px;flex-wrap:wrap}
+.crumb a:hover{color:var(--blue)}
+.crumb .sep{opacity:.5}
+.crumb .cur{color:var(--ink-2);font-weight:500;max-width:420px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* 文章卡片 */
+.post{
+  background:var(--card);border-radius:var(--radius-lg);box-shadow:var(--shadow);
+  padding:44px 52px 40px;position:relative;overflow:hidden;
+}
+.post::before{
+  content:"";position:absolute;top:0;left:0;right:0;height:4px;
+  background:linear-gradient(90deg,var(--blue),#6ec6ff 45%,transparent 92%);
+}
+/* 元信息头 */
+.post-cat{
+  display:inline-flex;align-items:center;gap:7px;font-size:13px;font-weight:600;color:var(--blue);
+  background:var(--blue-soft);padding:6px 14px;border-radius:99px;margin-bottom:18px;
+}
+.post-cat::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--blue)}
+.post h1{font-size:clamp(24px,3.4vw,34px);font-weight:800;line-height:1.45;letter-spacing:-.01em;margin-bottom:18px}
+.post-meta{display:flex;align-items:center;gap:9px 20px;flex-wrap:wrap;font-size:13.5px;color:var(--ink-3);padding-bottom:24px;border-bottom:1px solid var(--line);margin-bottom:32px}
+.post-meta .m{display:inline-flex;align-items:center;gap:5px}
+.post-meta svg{opacity:.6}
+.post-meta .readtime{color:var(--green);font-weight:600}
+.post-meta .readtime::before{content:"●";font-size:8px;margin-right:2px}
+
+/* 正文排版 */
+.prose{font-size:16.5px;line-height:2.05;color:#33445c}
+.prose p{margin-bottom:1.35em}
+.prose h2{
+  font-size:23px;font-weight:700;color:var(--ink);margin:1.9em 0 .9em;
+  padding-left:14px;position:relative;line-height:1.5;
+}
+.prose h2::before{content:"";position:absolute;left:0;top:.28em;bottom:.28em;width:5px;border-radius:3px;background:var(--blue);box-shadow:2px 0 0 rgba(64,158,255,.25)}
+.prose h3{font-size:19px;font-weight:700;color:var(--ink);margin:1.6em 0 .8em}
+.prose h3::before{content:"# ";color:var(--blue);font-family:var(--font-mono);font-weight:600}
+.prose a.cnx{color:var(--blue);border-bottom:1px dashed rgba(64,158,255,.5);transition:all .15s}
+.prose a.cnx:hover{border-bottom-style:solid;color:var(--blue-deep)}
+.prose strong{color:var(--ink);font-weight:700}
+.prose code:not(pre code){
+  font-family:var(--font-mono);font-size:.86em;color:#c7254e;
+  background:#fdeef2;padding:2px 7px;border-radius:6px;margin:0 2px;
+}
+.prose blockquote{
+  margin:1.6em 0;padding:16px 22px;border-left:4px solid var(--blue);
+  background:var(--blue-soft);border-radius:0 12px 12px 0;color:var(--ink-2);font-size:15.5px;
+}
+.prose blockquote p{margin-bottom:0}
+.prose blockquote .src{display:block;margin-top:8px;font-size:13px;color:var(--ink-3);text-align:right}
+/* 代码块 */
+.codeblock{margin:1.7em 0;border-radius:13px;overflow:hidden;border:1px solid #1e2b45;box-shadow:0 10px 30px rgba(15,30,60,.18)}
+.codeblock .cb-bar{display:flex;align-items:center;gap:8px;padding:10px 16px;background:#141d33;border-bottom:1px solid #1e2b45}
+.codeblock .cb-bar .dot{width:10px;height:10px;border-radius:50%}
+.codeblock .cb-bar .file{margin-left:8px;font-family:var(--font-mono);font-size:11.5px;color:#7a8bb0}
+.codeblock .cb-bar .copy{
+  margin-left:auto;background:rgba(255,255,255,.08);border:none;color:#aebadb;font-size:11.5px;
+  font-family:var(--font-mono);padding:3px 12px;border-radius:6px;cursor:pointer;transition:all .15s;
+}
+.codeblock .cb-bar .copy:hover{background:var(--blue);color:#fff}
+.codeblock pre{
+  background:#0f1626;padding:18px 20px;overflow-x:auto;
+  font-family:var(--font-mono);font-size:13px;line-height:1.95;color:#d5e2f7;
+}
+.codeblock pre .c-k{color:#79c0ff}.codeblock pre .c-s{color:#ffa657}
+.codeblock pre .c-f{color:#7ee787}.codeblock pre .c-c{color:#6a7b9e}.codeblock pre .c-n{color:#f2cc60}
+/* 表格 */
+.tblwrap{margin:1.7em 0;overflow-x:auto;border-radius:12px;border:1px solid var(--line)}
+.prose table{width:100%;border-collapse:collapse;font-size:14px;background:#fff;min-width:520px}
+.prose th{background:var(--blue-soft);color:var(--ink);font-weight:600;text-align:left;padding:12px 16px;border-bottom:2px solid rgba(64,158,255,.3)}
+.prose td{padding:11px 16px;border-bottom:1px solid var(--line);color:var(--ink-2)}
+.prose tr:last-child td{border-bottom:none}
+.prose tr:hover td{background:rgba(64,158,255,.035)}
+.prose td b.good{color:var(--green)}
+.prose td b.bad{color:#f56c6c}
+/* 插图占位 */
+.figure{margin:1.8em 0;border-radius:14px;overflow:hidden;border:1px solid var(--line);box-shadow:var(--shadow)}
+.figure .ph{
+  aspect-ratio:16/8;position:relative;
+  background:linear-gradient(135deg,#123c7a 0%,#2f7ce5 52%,#5fb2ff 100%);
+  display:grid;place-items:center;
+}
+.figure .ph::before{
+  content:"";position:absolute;inset:0;
+  background-image:radial-gradient(rgba(255,255,255,.25) 1px, transparent 1.5px);
+  background-size:18px 18px;
+  mask-image:linear-gradient(160deg,#000 0%,transparent 60%);
+  -webkit-mask-image:linear-gradient(160deg,#000 0%,transparent 60%);
+}
+.figure .ph span{
+  font-family:var(--font-mono);color:rgba(255,255,255,.92);font-size:16px;font-weight:600;
+  background:rgba(8,24,52,.4);border:1px solid rgba(255,255,255,.2);border-radius:10px;padding:10px 18px;
+  backdrop-filter:blur(4px);position:relative;z-index:1;
+}
+.figure figcaption{font-size:13px;color:var(--ink-3);text-align:center;padding:10px 0;background:#fff}
+.figure figcaption b{color:var(--ink-2)}
+/* 提示框 */
+.note{display:flex;gap:13px;margin:1.6em 0;padding:16px 18px;border-radius:12px;font-size:15px;line-height:1.9}
+.note .ic{flex:none;width:22px;height:22px;border-radius:50%;display:grid;place-items:center;color:#fff;font-size:13px;font-weight:700}
+.note-tip{background:rgba(52,199,123,.08);border:1px solid rgba(52,199,123,.3);color:#2d6e4f}
+.note-tip .ic{background:var(--green)}
+.note-warn{background:rgba(230,162,60,.09);border:1px solid rgba(230,162,60,.35);color:#8a6420}
+.note-warn .ic{background:var(--amber)}
+.note b{font-weight:700}
+
+/* 文末标签 */
+.post-tags{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:34px;padding-top:24px;border-top:1px solid var(--line)}
+.post-tags .lb{font-size:13.5px;color:var(--ink-3);display:inline-flex;align-items:center;gap:5px}
+.post-tags a{font-size:13px;color:var(--blue);background:var(--blue-soft);padding:5px 13px;border-radius:99px;transition:all .18s;font-weight:500}
+.post-tags a:hover{background:var(--blue);color:#fff;box-shadow:0 5px 12px rgba(64,158,255,.3)}
+.post-share{display:flex;gap:10px;margin-left:auto}
+.post-share a{
+  width:34px;height:34px;border-radius:10px;display:grid;place-items:center;
+  background:var(--bg);border:1px solid var(--line);color:var(--ink-3);transition:all .18s;
+}
+.post-share a:hover{background:var(--blue);border-color:var(--blue);color:#fff;transform:translateY(-2px)}
+
+/* ───────── 悬浮目录 ───────── */
+.toc-wrap{align-self:start;position:sticky;top:88px;max-height:calc(100vh - 110px);display:flex;flex-direction:column;gap:20px}
+.toc{
+  background:#fff;border-radius:var(--radius);box-shadow:var(--shadow);
+  padding:18px 6px 14px 0;overflow-y:auto;flex:1;min-width:0;
+}
+.toc::-webkit-scrollbar{width:4px}
+.toc::-webkit-scrollbar-thumb{background:var(--line);border-radius:2px}
+.toc h5{font-size:12px;font-weight:700;color:var(--ink-3);letter-spacing:.18em;padding:0 18px 10px;display:flex;align-items:center;gap:7px}
+.toc h5::before{content:"";width:14px;height:2px;border-radius:2px;background:var(--blue)}
+.toc a{
+  display:block;font-size:13.5px;color:var(--ink-2);padding:7px 12px 7px 18px;line-height:1.55;
+  border-left:2px solid transparent;transition:all .18s;position:relative;
+}
+.toc a.lvl3{padding-left:32px;font-size:12.5px}
+.toc a:hover{color:var(--blue);background:var(--blue-soft)}
+.toc a.on{color:var(--blue);border-left-color:var(--blue);background:var(--blue-soft);font-weight:600}
+/* 目录小卡：站点信息 */
+.toc-side{background:#fff;border-radius:var(--radius);box-shadow:var(--shadow);padding:18px 20px}
+.toc-side h5{font-size:12px;font-weight:700;color:var(--ink-3);letter-spacing:.18em;margin-bottom:12px;display:flex;align-items:center;gap:7px}
+.toc-side h5::before{content:"";width:14px;height:2px;border-radius:2px;background:var(--blue)}
+.toc-side .row{display:flex;align-items:center;gap:11px;padding:8px 0;border-bottom:1px dashed var(--line);font-size:13.5px;color:var(--ink-2)}
+.toc-side .row:last-child{border-bottom:none}
+.toc-side .row .ic{width:30px;height:30px;border-radius:9px;background:var(--blue-soft);color:var(--blue);display:grid;place-items:center;flex:none}
+.toc-side .row b{font-family:var(--font-en);font-size:16px;color:var(--ink);display:block;line-height:1.2}
+.toc-side .row span{font-size:11.5px;color:var(--ink-3)}
+
+/* ───────── 上下篇导航 ───────── */
+.pn-nav{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:22px}
+.pn{
+  background:#fff;border-radius:var(--radius);box-shadow:var(--shadow);padding:18px 20px;
+  display:flex;flex-direction:column;gap:7px;transition:all .2s;border:1px solid transparent;
+}
+.pn:hover{border-color:rgba(64,158,255,.4);box-shadow:0 10px 26px rgba(64,158,255,.12);transform:translateY(-3px)}
+.pn .dir{font-size:12px;color:var(--ink-3);display:inline-flex;align-items:center;gap:5px}
+.pn.next{text-align:right;align-items:flex-end}
+.pn .dir svg{opacity:.6}
+.pn .t{font-size:15px;font-weight:600;line-height:1.6;color:var(--ink);display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden}
+.pn:hover .t{color:var(--blue)}
+.pn.prev .dir{color:var(--blue)}
+
+/* ───────── 相关文章 ───────── */
+.related{margin-top:46px}
+.section-head{display:flex;align-items:center;gap:14px;margin-bottom:22px}
+.section-head .bar{width:5px;height:22px;border-radius:3px;background:var(--blue);box-shadow:2px 0 0 rgba(64,158,255,.25)}
+.section-head h3{font-size:20px;font-weight:700}
+.section-head .sub{font-family:var(--font-en);font-size:12px;color:var(--ink-3);letter-spacing:.2em;text-transform:uppercase;margin-top:3px}
+.rel-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+.card{
+  background:var(--card);border-radius:var(--radius);overflow:hidden;
+  box-shadow:var(--shadow);transition:transform .28s cubic-bezier(.2,.8,.3,1),box-shadow .28s;
+  display:flex;flex-direction:column;
+}
+.card:hover{transform:translateY(-6px);box-shadow:var(--shadow-lift)}
+.card-media{position:relative;aspect-ratio:16/9.5;overflow:hidden}
+.card-media .grad{position:absolute;inset:0;transition:transform .55s cubic-bezier(.2,.8,.3,1)}
+.card:hover .grad{transform:scale(1.07)}
+.card-media::after{
+  content:"";position:absolute;inset:0;z-index:1;
+  background-image:radial-gradient(rgba(255,255,255,.22) 1px, transparent 1.5px);
+  background-size:16px 16px;
+  mask-image:linear-gradient(160deg,#000 0%,transparent 55%);
+  -webkit-mask-image:linear-gradient(160deg,#000 0%,transparent 55%);
+}
+.g1{background:linear-gradient(135deg,#2563eb,#38bdf8)}
+.g2{background:linear-gradient(135deg,#166534,#4ade80)}
+.g3{background:linear-gradient(135deg,#1e40af,#818cf8)}
+.card-media .glyph{
+  position:absolute;inset:0;display:grid;place-items:center;z-index:2;
+  font-family:var(--font-mono);font-weight:600;font-size:40px;color:rgba(255,255,255,.92);
+  text-shadow:0 3px 16px rgba(0,0,0,.28);transition:transform .4s cubic-bezier(.2,.8,.3,1);
+}
+.card:hover .glyph{transform:translateY(-4px) scale(1.08)}
+.card-media .cat-badge{
+  position:absolute;left:12px;top:12px;z-index:3;font-size:12px;font-weight:600;color:#fff;
+  background:rgba(15,23,42,.45);backdrop-filter:blur(6px);padding:4px 12px;border-radius:99px;
+  border:1px solid rgba(255,255,255,.2);
+}
+.card-body{padding:17px 19px 15px;display:flex;flex-direction:column;flex:1}
+.card-body h4{font-size:15.5px;font-weight:600;line-height:1.6;margin-bottom:8px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.card:hover h4{color:var(--blue)}
+.card-body p{font-size:13px;color:var(--ink-2);line-height:1.8;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin-bottom:12px;flex:1}
+.card-foot{display:flex;align-items:center;justify-content:space-between;font-size:12px;color:var(--ink-3)}
+.card-foot .tags span{color:var(--blue);background:var(--blue-soft);padding:2px 9px;border-radius:5px;font-size:12px;margin-right:6px}
+
+/* ───────── 评论区 ───────── */
+.comments{margin-top:46px;background:#fff;border-radius:var(--radius-lg);box-shadow:var(--shadow);padding:34px 38px}
+.comments h3{font-size:20px;font-weight:700;display:flex;align-items:center;gap:12px;margin-bottom:6px}
+.comments h3 .cnt{font-size:13px;color:var(--blue);background:var(--blue-soft);padding:2px 11px;border-radius:99px;font-weight:600}
+.comments .sub{font-size:13px;color:var(--ink-3);margin-bottom:26px}
+/* 评论项 */
+.cmt{display:flex;gap:16px;padding:22px 0;border-bottom:1px dashed var(--line)}
+.cmt:last-of-type{border-bottom:none}
+.cmt .avatar{
+  flex:none;width:42px;height:42px;border-radius:13px;display:grid;place-items:center;
+  color:#fff;font-weight:700;font-size:16px;font-family:var(--font-en);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.3), 0 4px 10px rgba(31,60,105,.15);
+}
+.cmt .c-main{flex:1;min-width:0}
+.cmt .c-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:7px}
+.cmt .c-name{font-size:14.5px;font-weight:600;color:var(--ink)}
+.cmt .c-badge{font-size:11px;color:var(--amber);border:1px solid rgba(230,162,60,.45);background:rgba(230,162,60,.08);border-radius:5px;padding:1px 8px}
+.cmt .c-time{font-size:12px;color:var(--ink-3)}
+.cmt .c-act{margin-left:auto;font-size:12.5px;color:var(--ink-3);cursor:pointer;transition:color .15s;display:inline-flex;gap:4px;align-items:center}
+.cmt .c-act:hover{color:var(--blue)}
+.cmt .c-body{font-size:14.5px;line-height:1.95;color:var(--ink-2)}
+.cmt .c-body a{color:var(--blue)}
+/* 楼中楼 */
+.cmt-child{margin-top:16px;margin-left:6px;padding-left:18px;border-left:2px solid var(--line);display:grid;gap:14px}
+.cmt-child .cmt{padding:0 0 14px;border-bottom:1px dashed var(--line)}
+.cmt-child .cmt:last-child{border-bottom:none;padding-bottom:0}
+.cmt-child .avatar{width:34px;height:34px;border-radius:10px;font-size:13px}
+/* 评论表单 */
+.cmt-form{margin-top:30px;padding-top:28px;border-top:1px solid var(--line)}
+.cmt-form h4{font-size:16px;font-weight:700;margin-bottom:16px;display:flex;align-items:center;gap:8px}
+.cmt-form h4::before{content:"✎";color:var(--blue)}
+.cmt-form .fields{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+.cmt-form .field input{
+  width:100%;border:1px solid var(--line);border-radius:10px;padding:11px 15px;font-size:14px;
+  font-family:var(--font-cn);color:var(--ink);background:var(--bg);outline:none;transition:all .2s;
+}
+.cmt-form .field input:focus{border-color:var(--blue);background:#fff;box-shadow:0 0 0 3px rgba(64,158,255,.13)}
+.cmt-form .field label{display:block;font-size:12.5px;color:var(--ink-3);margin-bottom:6px}
+.cmt-form .field label b{color:var(--blue)}
+.cmt-form textarea{
+  width:100%;border:1px solid var(--line);border-radius:12px;padding:14px 16px;font-size:14.5px;
+  font-family:var(--font-cn);color:var(--ink);background:var(--bg);outline:none;resize:vertical;
+  min-height:120px;line-height:1.9;transition:all .2s;margin-bottom:6px;
+}
+.cmt-form textarea:focus{border-color:var(--blue);background:#fff;box-shadow:0 0 0 3px rgba(64,158,255,.13)}
+.cmt-form .foot{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap}
+.cmt-form .tip{font-size:12.5px;color:var(--ink-3)}
+.cmt-form .tip i{font-style:normal;color:var(--green)}
+.cmt-form button.submit{
+  display:inline-flex;align-items:center;gap:8px;border:none;cursor:pointer;
+  background:linear-gradient(135deg,#5aabff,#2f6fd6);color:#fff;font-size:14.5px;font-weight:600;
+  padding:11px 34px;border-radius:99px;box-shadow:0 6px 18px rgba(64,158,255,.35);transition:all .2s;
+}
+.cmt-form button.submit:hover{transform:translateY(-2px);box-shadow:0 10px 26px rgba(64,158,255,.45)}
+.cmt-form button.submit:active{transform:none}
+
+/* ───────── 返回顶部 ───────── */
+.backtop{
+  position:fixed;right:26px;bottom:30px;width:44px;height:44px;border-radius:13px;border:none;
+  background:#fff;color:var(--blue);box-shadow:0 8px 24px rgba(31,60,105,.18);cursor:pointer;
+  display:grid;place-items:center;opacity:0;visibility:hidden;transform:translateY(10px);
+  transition:all .25s;z-index:150;border:1px solid var(--line);
+}
+.backtop.show{opacity:1;visibility:visible;transform:none}
+.backtop:hover{background:var(--blue);color:#fff;transform:translateY(-3px)}
+
+/* ───────── 页脚 ───────── */
+footer{margin-top:64px;background:#16202e;color:#94a3b8;padding:52px 0 0;position:relative;overflow:hidden}
+footer::before{content:"";position:absolute;top:0;left:0;right:0;height:3px;
+  background:linear-gradient(90deg,var(--blue),#6ec6ff 35%,transparent 75%)}
+footer::after{
+  content:"</>";position:absolute;right:-20px;top:6px;font-family:var(--font-mono);font-weight:600;
+  font-size:200px;color:rgba(255,255,255,.025);line-height:1;pointer-events:none;
+}
+.foot-grid{display:grid;grid-template-columns:1.6fr 1fr 1fr 1fr;gap:36px;padding-bottom:40px;position:relative;z-index:1;max-width:1200px;margin:0 auto;padding-left:24px;padding-right:24px}
+.foot-brand .logo{color:#fff;margin-bottom:14px}
+.foot-brand p{font-size:13.5px;line-height:2;color:#64748b;max-width:300px}
+.foot-col h5{color:#e2e8f0;font-size:15px;font-weight:600;margin-bottom:16px}
+.foot-col ul{list-style:none;display:grid;gap:10px}
+.foot-col a{font-size:13.5px;color:#64748b;transition:all .18s;display:inline-flex;align-items:center;gap:6px}
+.foot-col a::before{content:"";width:0;height:1.5px;background:var(--blue);transition:width .2s}
+.foot-col a:hover{color:#6ec6ff}
+.foot-col a:hover::before{width:12px}
+.foot-bar{border-top:1px solid rgba(255,255,255,.07);padding:18px 0;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;font-size:12.5px;color:#475569}
+.foot-bar .inner{max-width:1200px;margin:0 auto;padding:0 24px;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;width:100%}
+.foot-bar .icp{display:flex;gap:16px;flex-wrap:wrap}
+
+/* ───────── 滚动渐入 ───────── */
+.reveal{opacity:0;transform:translateY(22px);transition:opacity .6s cubic-bezier(.2,.7,.3,1),transform .6s cubic-bezier(.2,.7,.3,1)}
+.reveal.in{opacity:1;transform:none}
+@keyframes rise{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
+.crumb,.post,.pn-nav,.related,.comments{animation:rise .7s cubic-bezier(.2,.7,.3,1) both}
+.pn-nav{animation-delay:.08s}.related{animation-delay:.14s}.comments{animation-delay:.2s}
+
+/* ───────── 响应式 ───────── */
+@media (max-width:1180px){
+  .article-layout{grid-template-columns:minmax(0,1fr);max-width:840px}
+  .toc-wrap{display:none}
+}
+@media (max-width:768px){
+  .nav-menu,.nav-search{display:none}
+  .nav-burger{display:block}
+  .article-layout{padding:22px 16px 0}
+  .post{padding:26px 22px 28px}
+  .comments{padding:26px 20px}
+  .cmt-form .fields{grid-template-columns:1fr}
+  .rel-grid{grid-template-columns:1fr}
+  .pn-nav{grid-template-columns:1fr}
+  .pn.next{text-align:left;align-items:flex-start}
+  .foot-grid{grid-template-columns:1fr;gap:28px}
+  .backtop{right:16px;bottom:20px}
+  footer::after{font-size:120px}
+  .post-share{margin-left:0;width:100%}
+}
+</style>
+</head>
+<body>
+
+<div class="progress" id="progress"></div>
+
+<div class="nav-wrap">
+  <nav class="nav" id="nav">
+    <div class="wrap nav-inner">
+      <a class="logo" href="#"><span class="logo-mark">S</span>Stu<em>Flow</em></a>
+      <ul class="nav-menu">
+        <li><a href="#">首页</a></li>
+        <li><a href="#">软件资源</a></li>
+        <li><a href="#">软件使用</a></li>
+        <li>
+          <a class="active" href="#">代码编程
+            <svg class="car" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="m6 9 6 6 6-6"/></svg>
+          </a>
+          <div class="submenu">
+            <a href="#"><span class="ic" style="background:#409eff">WP</span><span class="tx"><b>WordPress</b><span>主题与插件开发 86 篇</span></span></a>
+            <a href="#"><span class="ic" style="background:#34c77b">JS</span><span class="tx"><b>JavaScript</b><span>ES 规范与工程实践 61 篇</span></span></a>
+            <a href="#"><span class="ic" style="background:#e6a23c">KT</span><span class="tx"><b>Kotlin / Android</b><span>协程与移动端开发 28 篇</span></span></a>
+            <a href="#"><span class="ic" style="background:#8b5cf6">C++</span><span class="tx"><b>C / C++</b><span>底层与性能优化 19 篇</span></span></a>
+            <a href="#"><span class="ic" style="background:#f43f5e">VUE</span><span class="tx"><b>Vue</b><span>组件设计与生态 24 篇</span></span></a>
+            <a href="#"><span class="ic" style="background:#0ea5e9">UNI</span><span class="tx"><b>UniApp</b><span>跨端开发笔记 12 篇</span></span></a>
+          </div>
+        </li>
+        <li><a href="#">汇编逆向</a></li>
+        <li><a href="#">运维</a></li>
+        <li><a href="#">关于本站</a></li>
+      </ul>
+      <label class="nav-search">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        <input type="text" placeholder="搜索文章…">
+        <kbd>Ctrl K</kbd>
+      </label>
+      <button class="nav-burger" id="burger" aria-label="菜单">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+      </button>
+    </div>
+  </nav>
+</div>
+
+<!-- 移动抽屉 -->
+<div class="drawer-mask" id="drawerMask"></div>
+<aside class="drawer" id="drawer">
+  <div class="d-head">
+    <a class="logo" href="#"><span class="logo-mark" style="width:30px;height:30px;font-size:14px">S</span>Stu<em>Flow</em></a>
+    <button class="d-close" id="drawerClose" aria-label="关闭">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>
+    </button>
+  </div>
+  <label class="d-search">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" style="color:var(--ink-3)"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+    <input type="text" placeholder="搜索文章…">
+  </label>
+  <a class="d-link" href="#">首页</a>
+  <a class="d-link" href="#">软件资源 <span class="n">92</span></a>
+  <a class="d-link" href="#">软件使用 <span class="n">37</span></a>
+  <a class="d-link on" href="#">代码编程 <span class="n">74</span></a>
+  <a class="d-link" href="#">汇编逆向 <span class="n">31</span></a>
+  <a class="d-link" href="#">运维部署 <span class="n">45</span></a>
+  <a class="d-link" href="#">关于本站</a>
+</aside>
+
+<div class="article-layout">
+  <!-- 主栏 -->
+  <div>
+    <nav class="crumb">
+      <a href="#">首页</a><span class="sep">/</span>
+      <a href="#">代码编程</a><span class="sep">/</span>
+      <a href="#">前端开发</a><span class="sep">/</span>
+      <span class="cur">Vite 8 深度实测：Rolldown 原生打包到底快了多少？</span>
+    </nav>
+
+    <article class="post">
+      <span class="post-cat">前端开发</span>
+      <h1>Vite 8 深度实测：Rolldown 原生打包到底快了多少？</h1>
+      <div class="post-meta">
+        <span class="m">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="3"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+          2026-10-07
+        </span>
+        <span class="m">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+          1.8k 阅读
+        </span>
+        <span class="m">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a8 8 0 0 1-8 8H5l-2 2V12a8 8 0 0 1 8-8h2a8 8 0 0 1 8 8Z"/></svg>
+          58 评论
+        </span>
+        <span class="m readtime">约 9 分钟</span>
+        <span class="m">5,340 字</span>
+      </div>
+
+      <div class="prose">
+        <p>Vite 8 把打包内核从 Rollup（JS 实现）切换成了 <strong>Rolldown（Rust 实现）</strong>，官方宣称构建速度提升「一个数量级」。数字很吓人，但落到我们自己的项目里到底能快多少？我把手头三个真实项目（一个组件库、一个中后台、一个博客主题）全部升上去跑了一轮完整压测，这篇文章就是那份原始数据的整理。</p>
+
+        <blockquote>
+          <p>先说结论：冷启动从 9.4s 降到 0.7s，HMR 大项目里稳定在 100ms 以内，但 SSP（服务端渲染同构打包）阶段还有三个坑需要手动绕行。</p>
+          <span class="src">—— 本文结论速览</span>
+        </blockquote>
+
+        <h2 id="s1">测试环境与项目样本</h2>
+        <p>为了保证数据可比，三个项目在同一台机器上各跑五轮取中位数，<code>vite@5.4.8</code> 与 <code>vite@8.0.1</code> 之间只升级 Vite 及配套插件，业务代码零改动。机器配置与项目规模如下：</p>
+
+        <div class="tblwrap"><table>
+          <thead><tr><th>项目</th><th>类型</th><th>模块数</th><th>依赖数</th><th>产物体积</th></tr></thead>
+          <tbody>
+            <tr><td>StuUI</td><td>组件库</td><td>412</td><td>68</td><td>412 KB</td></tr>
+            <tr><td>Admin Console</td><td>中后台</td><td>1,730</td><td>216</td><td>2.8 MB</td></tr>
+            <tr><td>StuFlow Theme</td><td>博客主题</td><td>96</td><td>31</td><td>610 KB</td></tr>
+          </tbody>
+        </table></div>
+
+        <figure class="figure">
+          <div class="ph"><span>FIG.01 — Cold Start: 9.4s → 0.7s</span></div>
+          <figcaption><b>图 1</b>：三个项目的冷启动耗时对比（五轮中位数，单位：秒）</figcaption>
+        </figure>
+
+        <h2 id="s2">冷启动：提升是量级的，但依赖规模</h2>
+        <p>Rolldown 用 Rust 重写了模块解析与转换管线，收益最直接体现在冷启动上。三个项目的实测结果：</p>
+        <p>小项目（96 模块）从 <code>1.2s</code> 降到 <code>0.28s</code>，感知上就是「秒开」；中后台这种 1,700+ 模块的大工程才是重头戏——<strong>9.4s 直接打到了 0.7s</strong>，早上泡咖啡回来 dev server 已经跑起来的体验确实回不去了。</p>
+        <p>不过要注意一个细节：这个 0.7s 是「首次可交互」时间，不是完整依赖预构建（optimizeDeps）时间。首次访问某个冷门依赖时仍会触发按需预构建，页面会有一次短暂的可感知延迟，官方文档里称其为 <a class="cnx" href="#">deferred dependency optimization</a>。</p>
+
+        <div class="note note-tip">
+          <span class="ic">i</span>
+          <div><b>实践建议</b>：如果你的项目用 monorepo 且依赖被多个包共享，把 <code>optimizeDeps.include</code> 显式列全，可以消除掉 90% 的按需预构建卡顿。</div>
+        </div>
+
+        <h2 id="s3">HMR：快到可以关掉进度提示</h2>
+        <p>热更新是日常开发中感受最深的环节。改一个组件文件，Vite 5 在大项目里 HMR 回包普遍在 600~900ms（含浏览器重渲染），Vite 8 实测稳定在 <strong>100ms 以内</strong>，多数情况下是 40~70ms——快到你甚至可以把终端里的 rebuild 提示关掉。</p>
+
+        <div class="codeblock">
+          <div class="cb-bar">
+            <span class="dot" style="background:#ff5f57"></span><span class="dot" style="background:#febc2e"></span><span class="dot" style="background:#28c840"></span>
+            <span class="file">bench/hmr.spec.ts</span>
+            <button class="copy">copy</button>
+          </div>
+          <pre><span class="c-c">// 压测脚本核心片段：连续修改组件并采样回包延迟</span>
+<span class="c-k">const</span> samples = <span class="c-k">await</span> <span class="c-f">bench</span>({
+  entry: <span class="c-s">'src/views/dashboard/index.vue'</span>,
+  edits: <span class="c-n">50</span>,        <span class="c-c">// 连续 50 次修改</span>
+  cooldown: <span class="c-n">120</span>,   <span class="c-c">// 每次间隔 120ms，模拟真实敲键盘节奏</span>
+});
+<span class="c-f">console</span>.<span class="c-f">table</span>({
+  p50: <span class="c-f">percentile</span>(samples, <span class="c-n">50</span>),   <span class="c-c">// 46ms</span>
+  p95: <span class="c-f">percentile</span>(samples, <span class="c-n">95</span>),   <span class="c-c">// 88ms</span>
+  p99: <span class="c-f">percentile</span>(samples, <span class="c-n">99</span>),   <span class="c-c">// 103ms</span>
+});</pre>
+        </div>
+
+        <h2 id="s4">产物体积：基本持平，个别场景反增</h2>
+        <p>打包产物方面，三个项目总体持平（±2% 以内），但有一个反直觉的发现：<strong>使用了大量 <code>dynamic import</code> 的中后台项目，产物体积反而增加了 4.6%</strong>。原因是 Rolldown 的 chunk 划分算法比 Rollup 更激进，倾向合并共享 chunk，导致某些页面级 chunk 变大。对走 CDN 且开启 gzip 的场景影响很小，但如果你在做「首屏 KB 预算」就需要重新跑一遍数字。</p>
+
+        <div class="note note-warn">
+          <span class="ic">!</span>
+          <div><b>注意</b>：如果升级后构建报 <code>ROLLDOWN_PLUGIN_API_MISMATCH</code>，说明某个旧插件还在用 Rollup 的兼容层 API，去插件仓库找 8.x 适配版，别硬压版本号。</div>
+        </div>
+
+        <h2 id="s5">SSP 阶段的三个坑</h2>
+        <p>同构打包（SSR + SPA 混合）是我这次升级翻车最狠的地方，三个坑按踩的先后顺序记录：</p>
+
+        <h3 id="s5-1">坑一：环境变量注入时序</h3>
+        <p>Vite 8 把 <code>import.meta.env</code> 的替换从转换阶段挪到了生成阶段，导致原来在插件 <code>transform</code> 钩子里读 env 的写法拿到的是占位符。解法是改监听 <code>generateBundle</code>，或者直接把 env 读取挪到配置文件加载期。</p>
+
+        <h3 id="s5-2">坑二：CSS 模块命名不稳定</h3>
+        <p>同一个 CSS Module 在 dev 与 build 下类名哈希算法不一致，SSR 注入的类名和客户端 hydration 对不上，页面直接裸奔。临时解法是锁定 <code>generateScopedName</code> 为固定模板。</p>
+
+        <h3 id="s5-3">坑三：插件并行化导致的隐式依赖顺序</h3>
+        <p>Rolldown 默认并行执行插件钩子，两个有先后依赖的插件（比如先做国际化文案替换、再做压缩）在 Rollup 时代靠「注册顺序」隐式保证，现在必须显式声明依赖或者拆成两轮构建。</p>
+
+        <h2 id="s6">要不要现在就升级？</h2>
+        <p>我的建议分三档：<strong>纯客户端 SPA</strong>，现在就升，收益立竿见影；<strong>组件库 / 工具库</strong>，等生态插件跟进一两个版本再上；<strong>重 SSP 的同构项目</strong>，先在分支上把第三节三个坑趟一遍，确认没有使用受影响的插件再合。</p>
+        <p>最后放一张完整的压测数据表，欢迎拿自己的项目数据来对线：</p>
+
+        <div class="tblwrap"><table>
+          <thead><tr><th>指标</th><th>Vite 5.4</th><th>Vite 8.0</th><th>变化</th></tr></thead>
+          <tbody>
+            <tr><td>冷启动（中后台）</td><td>9.4s</td><td>0.7s</td><td><b class="good">-92%</b></td></tr>
+            <tr><td>冷启动（博客主题）</td><td>1.2s</td><td>0.28s</td><td><b class="good">-77%</b></td></tr>
+            <tr><td>HMR p95（中后台）</td><td>870ms</td><td>88ms</td><td><b class="good">-90%</b></td></tr>
+            <tr><td>生产构建（中后台）</td><td>58s</td><td>41s</td><td><b class="good">-29%</b></td></tr>
+            <tr><td>产物体积（中后台）</td><td>2.68 MB</td><td>2.80 MB</td><td><b class="bad">+4.6%</b></td></tr>
+            <tr><td>产物体积（组件库）</td><td>412 KB</td><td>409 KB</td><td><b class="good">-0.7%</b></td></tr>
+          </tbody>
+        </table></div>
+
+        <p>本文压测脚本与原始数据已放在 <a class="cnx" href="#">GitHub 仓库</a>，测试机器配置、五轮原始耗时都在 README 里，欢迎复现。下一篇打算聊聊升级过程中那个 CSS Module 哈希坑的完整排查过程，感兴趣的可以订阅 RSS。</p>
+      </div>
+
+      <div class="post-tags">
+        <span class="lb">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.6 13.4 12 22l-8-8V4a1 1 0 0 1 1-1h9l6.6 6.6a2 2 0 0 1 0 2.8Z"/><circle cx="7.5" cy="7.5" r="1"/></svg>
+          标签
+        </span>
+        <a href="#">Vite</a><a href="#">工程化</a><a href="#">Rolldown</a><a href="#">性能优化</a>
+        <div class="post-share">
+          <a href="#" title="分享到微信"><svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M9.5 4C5.5 4 2 6.9 2 10.7c0 2.2 1.1 4 2.8 5.3l-.7 2.1 2.4-1.2c.9.2 1.7.4 3 .4h.6a5.5 5.5 0 0 1-.1-1.1c0-3.4 3.2-6 7-6h.4C16.9 6.7 13.6 4 9.5 4Zm-2.6 4a1 1 0 1 1 0 2 1 1 0 0 1 0-2Zm5.2 0a1 1 0 1 1 0 2 1 1 0 0 1 0-2Z"/><path d="M22 16.2c0-3-2.9-5.2-6.2-5.2s-6.2 2.3-6.2 5.2 2.9 5.2 6.2 5.2c.9 0 1.8-.2 2.6-.4l2 1-.6-1.8c1.4-1 2.2-2.4 2.2-4Zm-8.2-1.6a.9.9 0 1 1 0 1.8.9.9 0 0 1 0-1.8Zm4 0a.9.9 0 1 1 0 1.8.9.9 0 0 1 0-1.8Z"/></svg></a>
+          <a href="#" title="分享到微博"><svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M20 8.1c.6-.4 1.2-1 1.6-1.7-.6.3-1.2.5-1.9.5a3.3 3.3 0 0 0-5.6 3A9.3 9.3 0 0 1 6.9 7a3.3 3.3 0 0 0 1 4.4c-.5 0-1.1-.2-1.5-.4 0 1.5 1.1 2.8 2.5 3.1-.5.1-1 .1-1.5 0a3.3 3.3 0 0 0 3 2.3A9.3 9.3 0 0 1 3 18.2a13.1 13.1 0 0 0 7.1 2.1c8.5 0 13.2-7.2 12.9-13.6.6-.4 1.2-1 1.6-1.7l-2.6 1.1Z"/></svg></a>
+          <a href="#" title="复制链接"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></svg></a>
+        </div>
+      </div>
+    </article>
+
+    <!-- 上下篇 -->
+    <nav class="pn-nav">
+      <a class="pn prev" href="#">
+        <span class="dir">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="m15 6-6 6 6 6"/></svg>
+          上一篇
+        </span>
+        <span class="t">Windows 常驻效率工具清单：这 12 款让我回不去默认系统</span>
+      </a>
+      <a class="pn next" href="#">
+        <span class="dir">下一篇
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="m9 6 6 6-6 6"/></svg>
+        </span>
+        <span class="t">Kotlin 协程在 Android 里的正确打开方式：结构化并发避坑</span>
+      </a>
+    </nav>
+
+    <!-- 相关文章 -->
+    <section class="related reveal">
+      <div class="section-head">
+        <span class="bar"></span>
+        <div><h3>相关阅读</h3><div class="sub">Related Posts</div></div>
+      </div>
+      <div class="rel-grid">
+        <article class="card">
+          <div class="card-media"><div class="grad g1"></div><div class="glyph">Vite</div><span class="cat-badge">前端开发</span></div>
+          <div class="card-body">
+            <h4>用容器查询改造 Vite 官方文档站：一次组件级响应式的实践</h4>
+            <p>@container 让组件真正自带响应式，三个真实组件改造案例，附渐进增强兜底方案。</p>
+            <div class="card-foot"><span>09-01 · 3.1k</span><div class="tags"><span>CSS</span><span>响应式</span></div></div>
+          </div>
+        </article>
+        <article class="card">
+          <div class="card-media"><div class="grad g2"></div><div class="glyph">Rollup</div><span class="cat-badge">前端开发</span></div>
+          <div class="card-body">
+            <h4>从零写一个 Rollup 插件：模块转换的完整生命周期图解</h4>
+            <p>hook 时序图一张讲清 transform / renderChunk / generateBundle 各自该干什么。</p>
+            <div class="card-foot"><span>08-24 · 2.2k</span><div class="tags"><span>Rollup</span><span>插件</span></div></div>
+          </div>
+        </article>
+        <article class="card">
+          <div class="card-media"><div class="grad g3"></div><div class="glyph">Perf</div><span class="cat-badge">性能优化</span></div>
+          <div class="card-body">
+            <h4>博客主题的 LCP 优化实录：从 2.4s 到 0.8s 的六次手术</h4>
+            <p>字体策略、图片管道、关键 CSS 内联……每一步都有 before/after 数据佐证。</p>
+            <div class="card-foot"><span>10-09 · 3.2k</span><div class="tags"><span>性能</span><span>WP 主题</span></div></div>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <!-- 评论区 -->
+    <section class="comments reveal">
+      <h3>评论 <span class="cnt">58</span></h3>
+      <p class="sub">留言无需注册，填个昵称就能说上两句 · 支持 Markdown 语法</p>
+
+      <div class="cmt">
+        <span class="avatar" style="background:linear-gradient(135deg,#409eff,#2f6fd6)">雾</span>
+        <div class="c-main">
+          <div class="c-head">
+            <span class="c-name">雾中行者</span>
+            <span class="c-badge">站长</span>
+            <span class="c-time">3 天前</span>
+            <span class="c-act"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>回复</span>
+          </div>
+          <div class="c-body">补一句：评论区亲测，产物体积增加的那个项目后来用 <code style="font-family:var(--font-mono);font-size:.86em;color:#c7254e;background:#fdeef2;padding:1px 5px;border-radius:4px">experimental.chunkStrategy: 'fine'</code> 压回去了，代价是 chunk 数量从 42 涨到 89，取舍大家自己权衡。</div>
+        </div>
+      </div>
+
+      <div class="cmt">
+        <span class="avatar" style="background:linear-gradient(135deg,#34c77b,#1f8f5a)">晨</span>
+        <div class="c-main">
+          <div class="c-head">
+            <span class="c-name">晨光代码</span>
+            <span class="c-time">3 天前</span>
+            <span class="c-act"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>回复</span>
+          </div>
+          <div class="c-body">同 1,800+ 模块的中后台，HMR 那个提升真不是吹的，升级当天组里一片哀嚎（感动的）。但是坑一我们也踩了，env 注入那个排查了一下午，建议直接置顶到文章开头 😂</div>
+          <div class="cmt-child">
+            <div class="cmt">
+              <span class="avatar" style="background:linear-gradient(135deg,#409eff,#2f6fd6)">雾</span>
+              <div class="c-main">
+                <div class="c-head">
+                  <span class="c-name">雾中行者</span>
+                  <span class="c-badge">站长</span>
+                  <span class="c-time">3 天前</span>
+                </div>
+                <div class="c-body">下次把「坑」章节挪到结论前面，教训深刻（笑）。</div>
+              </div>
+            </div>
+            <div class="cmt">
+              <span class="avatar" style="background:linear-gradient(135deg,#e6a23c,#cf8a1d)">R</span>
+              <div class="c-main">
+                <div class="c-head">
+                  <span class="c-name">Rolldown 路过</span>
+                  <span class="c-time">2 天前</span>
+                </div>
+                <div class="c-body">插件并行化那个行为其实是 feature，显式声明依赖才是正道，隐式顺序在 Rollup 里也一直是未定义行为来着。</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="cmt">
+        <span class="avatar" style="background:linear-gradient(135deg,#8b5cf6,#7c3aed)">晚</span>
+        <div class="c-main">
+          <div class="c-head">
+            <span class="c-name">晚风不晚</span>
+            <span class="c-time">昨天 21:47</span>
+            <span class="c-act"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>回复</span>
+          </div>
+          <div class="c-body">压测脚本仓库给个 star 了，README 里的原始数据是真良心。坐等下一篇 CSS Module 哈希排查。</div>
+        </div>
+      </div>
+
+      <!-- 评论表单 -->
+      <div class="cmt-form">
+        <h4>发表评论</h4>
+        <div class="fields">
+          <div class="field">
+            <label>昵称 <b>*</b></label>
+            <input type="text" placeholder="怎么称呼你？">
+          </div>
+          <div class="field">
+            <label>邮箱 <b>*</b>（不会公开，用于收到回复时通知）</label>
+            <input type="email" placeholder="you@example.com">
+          </div>
+        </div>
+        <textarea placeholder="说点什么吧… 支持 Markdown 语法（**加粗**、`代码`、> 引用）"></textarea>
+        <div class="foot">
+          <span class="tip"><i>✓</i> 无需注册，提交即显示 · 首次留言会进入审核队列</span>
+          <button class="submit">
+            提交评论
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="m9 6 6 6-6 6"/></svg>
+          </button>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- 悬浮目录 -->
+  <aside class="toc-wrap">
+    <nav class="toc" id="toc">
+      <h5>文章目录</h5>
+      <a href="#s1" class="lvl2">01 · 测试环境与项目样本</a>
+      <a href="#s2" class="lvl2">02 · 冷启动：提升是量级的</a>
+      <a href="#s3" class="lvl2">03 · HMR：快到关掉进度提示</a>
+      <a href="#s4" class="lvl2">04 · 产物体积：基本持平</a>
+      <a href="#s5" class="lvl2">05 · SSP 阶段的三个坑</a>
+      <a href="#s5-1" class="lvl3">坑一 · 环境变量注入时序</a>
+      <a href="#s5-2" class="lvl3">坑二 · CSS 模块命名不稳定</a>
+      <a href="#s5-3" class="lvl3">坑三 · 插件并行化</a>
+      <a href="#s6" class="lvl2">06 · 要不要现在就升级？</a>
+    </nav>
+    <div class="toc-side">
+      <h5>本文数据</h5>
+      <div class="row">
+        <span class="ic">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
+        </span>
+        <div><b>9 分钟</b><span>阅读时长</span></div>
+      </div>
+      <div class="row">
+        <span class="ic">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19V6a2 2 0 0 1 2-2h5v15H4ZM13 19V6a2 2 0 0 1 2-2h5v15h-7Z"/></svg>
+        </span>
+        <div><b>5,340</b><span>全文字数</span></div>
+      </div>
+      <div class="row">
+        <span class="ic">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+        </span>
+        <div><b>1,826</b><span>累计阅读</span></div>
+      </div>
+    </div>
+  </aside>
+</div>
+
+<button class="backtop" id="backtop" aria-label="返回顶部">
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 20V6m-6 6 6-6 6 6"/></svg>
+</button>
+
+<footer>
+  <div class="wrap foot-grid">
+    <div class="foot-brand">
+      <a class="logo" href="#"><span class="logo-mark">S</span>Stu<em>Flow</em></a>
+      <p>生命潦草，我在弯腰。<br>一个记录 WordPress、前端与折腾笔记的个人小站，主题由站长亲手打造。</p>
+    </div>
+    <div class="foot-col">
+      <h5>栏目</h5>
+      <ul><li><a href="#">软件资源</a></li><li><a href="#">软件使用</a></li><li><a href="#">代码编程</a></li><li><a href="#">汇编逆向</a></li><li><a href="#">运维部署</a></li></ul>
+    </div>
+    <div class="foot-col">
+      <h5>站点</h5>
+      <ul><li><a href="#">关于本站</a></li><li><a href="#">留言建议</a></li><li><a href="#">文章归档</a></li><li><a href="#">友情链接</a></li></ul>
+    </div>
+    <div class="foot-col">
+      <h5>订阅</h5>
+      <ul><li><a href="#">RSS 订阅</a></li><li><a href="#">微信公众号</a></li><li><a href="#">Telegram 频道</a></li></ul>
+    </div>
+  </div>
+  <div class="foot-bar">
+    <div class="inner">
+      <span>© 2016-2026 StuFlow · 保留所有权利</span>
+      <span class="icp"><span>蜀ICP备16029882号-1</span><span>公安备案 5101XXXXXXXXX号</span></span>
+    </div>
+  </div>
+</footer>
+
+<script>
+/* ── 进度条 / 导航投影 / 返回顶部 ── */
+const progress=document.getElementById('progress'),nav=document.getElementById('nav'),backtop=document.getElementById('backtop');
+addEventListener('scroll',()=>{
+  const h=document.documentElement,max=h.scrollHeight-h.clientHeight;
+  progress.style.width=(h.scrollTop/max*100)+'%';
+  nav.classList.toggle('scrolled',h.scrollTop>10);
+  backtop.classList.toggle('show',h.scrollTop>600);
+},{passive:true});
+backtop.addEventListener('click',()=>scrollTo({top:0,behavior:'smooth'}));
+
+/* ── 移动抽屉 ── */
+const drawer=document.getElementById('drawer'),mask=document.getElementById('drawerMask');
+const openDrawer=()=>{drawer.classList.add('open');mask.classList.add('open');document.body.style.overflow='hidden'};
+const closeDrawer=()=>{drawer.classList.remove('open');mask.classList.remove('open');document.body.style.overflow=''};
+document.getElementById('burger').addEventListener('click',openDrawer);
+document.getElementById('drawerClose').addEventListener('click',closeDrawer);
+mask.addEventListener('click',closeDrawer);
+
+/* ── 目录滚动高亮（scroll-spy） ── */
+const tocLinks=[...document.querySelectorAll('#toc a')];
+const heads=tocLinks.map(a=>document.getElementById(a.getAttribute('href').slice(1))).filter(Boolean);
+const spy=new IntersectionObserver(es=>{
+  es.forEach(e=>{
+    if(e.isIntersecting){
+      tocLinks.forEach(a=>a.classList.toggle('on',a.getAttribute('href')==='#'+e.target.id));
+    }
+  });
+},{rootMargin:'-20% 0px -70% 0px'});
+heads.forEach(h=>spy.observe(h));
+
+/* ── 滚动渐入 ── */
+const io=new IntersectionObserver(es=>es.forEach(e=>{
+  if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}
+}),{threshold:.1});
+document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
+
+/* ── 代码块复制按钮 ── */
+document.querySelectorAll('.codeblock .copy').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    const code=btn.closest('.codeblock').querySelector('pre').innerText;
+    navigator.clipboard?.writeText(code).then(()=>{
+      btn.textContent='已复制';
+      setTimeout(()=>btn.textContent='copy',1500);
+    }).catch(()=>{btn.textContent='复制失败';setTimeout(()=>btn.textContent='copy',1500)});
+  });
+});
+</script>
+</body>
+</html>

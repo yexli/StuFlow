@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>文章归档 · StuFlow</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --blue:#409eff;--blue-deep:#2f6fd6;--blue-soft:#ecf5ff;--blue-ghost:rgba(64,158,255,.12);
+  --green:#34c77b;--amber:#e6a23c;
+  --ink:#1f2d3d;--ink-2:#4b5b6d;--ink-3:#8a97a8;
+  --line:#e6ebf2;--bg:#f4f7fb;--card:#fff;
+  --radius:14px;--radius-lg:20px;
+  --shadow:0 2px 10px rgba(31,60,105,.06);--shadow-lift:0 16px 40px rgba(31,60,105,.16);
+  --font-en:'Outfit',-apple-system,'PingFang SC','Microsoft YaHei',sans-serif;
+  --font-mono:'JetBrains Mono','Cascadia Code',Consolas,monospace;
+  --font-cn:-apple-system,'PingFang SC','Hiragino Sans GB','Microsoft YaHei',sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  font-family:var(--font-cn);color:var(--ink);background:var(--bg);
+  background-image:
+    radial-gradient(ellipse 1000px 480px at 85% -100px,rgba(64,158,255,.10),transparent 62%),
+    radial-gradient(ellipse 700px 400px at -8% 300px,rgba(52,199,123,.05),transparent 60%);
+  background-attachment:fixed;-webkit-font-smoothing:antialiased;
+}
+a{color:inherit;text-decoration:none}
+img{display:block;max-width:100%}
+button{font-family:inherit}
+.wrap{max-width:1200px;margin:0 auto;padding:0 24px}
+
+/* ── 导航（与首页一致） ── */
+.progress{position:fixed;top:0;left:0;height:3px;width:0;z-index:300;
+  background:linear-gradient(90deg,var(--blue),#6ec6ff);box-shadow:0 0 10px rgba(64,158,255,.6);transition:width .08s linear}
+.nav-wrap{position:sticky;top:0;z-index:100}
+.nav{backdrop-filter:blur(16px) saturate(1.7);-webkit-backdrop-filter:blur(16px) saturate(1.7);
+  background:rgba(255,255,255,.74);border-bottom:1px solid rgba(31,60,105,.08);transition:box-shadow .3s}
+.nav.scrolled{box-shadow:0 6px 24px rgba(31,60,105,.08)}
+.nav-inner{display:flex;align-items:center;gap:24px;height:64px;position:relative}
+.logo{display:flex;align-items:center;gap:10px;font-family:var(--font-en);font-weight:800;font-size:22px;letter-spacing:-.02em;flex:none}
+.logo-mark{width:36px;height:36px;border-radius:11px;
+  background:linear-gradient(135deg,#5aabff 0%,#2f6fd6 60%,#1b4f9e 100%);
+  display:grid;place-items:center;color:#fff;font-size:17px;font-weight:800;
+  box-shadow:0 4px 14px rgba(64,158,255,.45),inset 0 1px 0 rgba(255,255,255,.35);
+  transition:transform .3s cubic-bezier(.34,1.56,.64,1)}
+.logo:hover .logo-mark{transform:rotate(-8deg) scale(1.08)}
+.logo em{font-style:normal;color:var(--blue)}
+.nav-menu{display:flex;gap:2px;list-style:none;margin-left:auto}
+.nav-menu>li{position:relative}
+.nav-menu>li>a{display:flex;align-items:center;gap:4px;padding:8px 14px;border-radius:9px;
+  font-size:15px;color:var(--ink-2);font-weight:500;transition:all .18s}
+.nav-menu>li>a .car{opacity:.55;transition:transform .2s}
+.nav-menu>li:hover>a{color:var(--blue);background:var(--blue-ghost)}
+.nav-menu>li:hover>a .car{transform:rotate(180deg)}
+.nav-menu>li>a.active{color:#fff;background:var(--blue);box-shadow:0 4px 12px rgba(64,158,255,.35)}
+.submenu{position:absolute;top:calc(100% + 8px);left:50%;transform:translateX(-50%) translateY(6px);
+  background:#fff;border:1px solid var(--line);border-radius:12px;box-shadow:0 18px 44px rgba(31,60,105,.16);
+  padding:8px;min-width:430px;display:grid;grid-template-columns:1fr 1fr;gap:2px;
+  opacity:0;visibility:hidden;transition:all .2s cubic-bezier(.2,.8,.3,1)}
+.nav-menu>li:hover .submenu{opacity:1;visibility:visible;transform:translateX(-50%) translateY(0)}
+.submenu::before{content:"";position:absolute;top:-4px;left:0;right:0;height:8px}
+.submenu a{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;font-size:14px;color:var(--ink-2);transition:all .15s}
+.submenu a:hover{background:var(--blue-soft);color:var(--blue)}
+.submenu .ic{width:28px;height:28px;border-radius:8px;display:grid;place-items:center;font-family:var(--font-mono);font-size:11px;font-weight:600;color:#fff;flex:none}
+.submenu .tx b{display:block;font-size:14px;font-weight:600}
+.submenu .tx span{font-size:12px;color:var(--ink-3)}
+.nav-search{display:flex;align-items:center;gap:8px;background:#fff;border:1px solid var(--line);border-radius:99px;
+  padding:7px 14px 7px 13px;width:200px;transition:all .25s;flex:none}
+.nav-search:focus-within{border-color:var(--blue);box-shadow:0 0 0 3px rgba(64,158,255,.15);width:250px}
+.nav-search svg{flex:none;color:var(--ink-3)}
+.nav-search input{border:none;outline:none;background:none;font-size:14px;width:100%;color:var(--ink);font-family:var(--font-cn)}
+.nav-search input::placeholder{color:var(--ink-3)}
+.nav-search kbd{font-family:var(--font-en);font-size:11px;color:var(--ink-3);border:1px solid var(--line);border-radius:5px;padding:1px 6px;background:var(--bg);flex:none}
+.nav-burger{display:none;margin-left:auto;background:none;border:none;cursor:pointer;color:var(--ink);padding:6px}
+.drawer-mask{position:fixed;inset:0;background:rgba(15,23,42,.4);z-index:198;opacity:0;visibility:hidden;transition:all .25s;backdrop-filter:blur(2px)}
+.drawer{position:fixed;top:0;right:-290px;width:280px;height:100vh;background:#fff;z-index:199;
+  transition:right .28s cubic-bezier(.2,.8,.3,1);padding:22px 18px;overflow-y:auto;box-shadow:-12px 0 40px rgba(31,60,105,.15)}
+.drawer.open{right:0}.drawer-mask.open{opacity:1;visibility:visible}
+.drawer .d-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}
+.drawer .d-head .logo{font-size:19px}
+.drawer .d-close{background:none;border:none;cursor:pointer;color:var(--ink-3);padding:4px}
+.drawer a.d-link{display:flex;align-items:center;justify-content:space-between;padding:13px 14px;border-radius:10px;font-size:15.5px;color:var(--ink-2);font-weight:500}
+.drawer a.d-link:hover,.drawer a.d-link.on{background:var(--blue-soft);color:var(--blue)}
+.drawer a.d-link .n{font-family:var(--font-en);font-size:12px;color:var(--ink-3)}
+.drawer .d-search{display:flex;gap:8px;align-items:center;background:var(--bg);border:1px solid var(--line);border-radius:99px;padding:9px 14px;margin-bottom:14px}
+.drawer .d-search input{border:none;background:none;outline:none;font-size:14px;width:100%}
+
+/* ── 归档头部 ── */
+.arc-hero{padding:44px 0 30px}
+.crumb{display:flex;align-items:center;gap:8px;font-size:13.5px;color:var(--ink-3);margin-bottom:24px;flex-wrap:wrap}
+.crumb a:hover{color:var(--blue)}
+.crumb .sep{opacity:.5}
+.crumb .cur{color:var(--ink-2);font-weight:500}
+.arc-head{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;flex-wrap:wrap;margin-bottom:34px}
+.arc-head h1{font-size:clamp(28px,4vw,40px);font-weight:800;letter-spacing:-.01em;line-height:1.3;margin:8px 0 12px}
+.arc-head h1 .hl{background:linear-gradient(120deg,rgba(64,158,255,.22),rgba(64,158,255,.05));padding:0 .18em;border-radius:8px}
+.arc-head .kicker{font-family:var(--font-en);font-weight:600;font-size:13px;color:var(--blue);letter-spacing:.16em;text-transform:uppercase;display:inline-flex;align-items:center;gap:9px}
+.arc-head .kicker::before{content:"";width:26px;height:2px;border-radius:2px;background:var(--blue)}
+.arc-head p{color:var(--ink-2);font-size:15px;max-width:520px;line-height:1.9}
+.arc-stats{display:flex;border:1px solid var(--line);border-radius:var(--radius);background:#fff;box-shadow:var(--shadow);overflow:hidden;position:relative}
+.arc-stats::before{content:"";position:absolute;top:0;left:0;right:0;height:3px;
+  background:linear-gradient(90deg,var(--blue),#6ec6ff 40%,transparent 90%)}
+.astat{padding:18px 26px 15px;text-align:center;border-right:1px solid var(--line);cursor:default;transition:background .2s}
+.astat:last-child{border-right:none}
+.astat:hover{background:var(--blue-soft)}
+.astat b{display:block;font-family:var(--font-en);font-size:26px;font-weight:800;line-height:1.15}
+.astat:hover b{color:var(--blue)}
+.astat span{font-size:12px;color:var(--ink-3);letter-spacing:.06em}
+
+/* ── 年份锚点 ── */
+.year-tabs{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:38px}
+.ytab{
+  display:inline-flex;align-items:center;gap:8px;padding:9px 20px;border-radius:12px;
+  font-family:var(--font-en);font-size:15px;font-weight:600;color:var(--ink-2);
+  background:#fff;border:1px solid var(--line);transition:all .18s;cursor:pointer;
+}
+.ytab .n{font-size:11.5px;color:var(--ink-3);font-weight:500}
+.ytab:hover{border-color:var(--blue);color:var(--blue);transform:translateY(-1px)}
+.ytab.on{background:linear-gradient(135deg,#5aabff,#2f6fd6);border-color:transparent;color:#fff;box-shadow:0 6px 16px rgba(64,158,255,.35)}
+.ytab.on .n{color:rgba(255,255,255,.8)}
+
+/* ── 时间线 ── */
+.timeline{position:relative;padding-left:34px;max-width:860px}
+.timeline::before{
+  content:"";position:absolute;left:10px;top:8px;bottom:8px;width:2px;
+  background:linear-gradient(180deg,var(--blue) 0%,rgba(64,158,255,.25) 75%,transparent 100%);
+  border-radius:2px;
+}
+.year-block{position:relative;margin-bottom:46px;scroll-margin-top:90px}
+.year-block::before{
+  content:"";position:absolute;left:-31px;top:14px;width:14px;height:14px;border-radius:50%;
+  background:#fff;border:3.5px solid var(--blue);box-shadow:0 0 0 4px rgba(64,158,255,.15);z-index:1;
+}
+.year-head{display:flex;align-items:baseline;gap:14px;margin-bottom:18px}
+.year-head h2{font-family:var(--font-en);font-size:30px;font-weight:800;letter-spacing:-.02em}
+.year-head .cnt{font-size:13px;color:var(--ink-3)}
+.year-head .cnt b{color:var(--blue);font-family:var(--font-en)}
+/* 月份组 */
+.month-group{margin-bottom:22px}
+.month-group .mg-head{
+  display:inline-flex;align-items:center;gap:8px;font-size:14px;font-weight:600;color:var(--ink-2);
+  background:#fff;border:1px solid var(--line);border-radius:99px;padding:5px 16px;margin-bottom:12px;
+  box-shadow:var(--shadow);
+}
+.month-group .mg-head .n{font-family:var(--font-en);font-size:12px;color:var(--ink-3);font-weight:500}
+.arc-item{
+  display:flex;align-items:center;gap:16px;padding:13px 18px;margin-bottom:8px;
+  background:#fff;border-radius:12px;border:1px solid transparent;box-shadow:var(--shadow);
+  transition:all .2s;position:relative;
+}
+.arc-item:hover{border-color:rgba(64,158,255,.4);box-shadow:0 8px 22px rgba(64,158,255,.12);transform:translateX(4px)}
+.arc-item .d{font-family:var(--font-mono);font-size:12.5px;color:var(--ink-3);flex:none;width:44px}
+.arc-item:hover .d{color:var(--blue)}
+.arc-item .t{font-size:15px;font-weight:500;line-height:1.55;flex:1;min-width:0;
+  display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden}
+.arc-item:hover .t{color:var(--blue)}
+.arc-item .cat{
+  flex:none;font-size:12px;color:var(--ink-3);background:var(--bg);border:1px solid var(--line);
+  padding:3px 11px;border-radius:99px;transition:all .18s;
+}
+.arc-item:hover .cat{color:var(--blue);background:var(--blue-soft);border-color:rgba(64,158,255,.3)}
+.arc-item .cmt{flex:none;font-size:12px;color:var(--ink-3);display:inline-flex;align-items:center;gap:4px}
+.arc-item .cmt::before{content:"◆";font-size:7px;color:var(--blue)}
+.arc-item .pin-flag{flex:none;font-size:11px;color:var(--amber);border:1px solid rgba(230,162,60,.45);background:rgba(230,162,60,.08);padding:2px 9px;border-radius:6px}
+
+/* ── 页脚 ── */
+footer{margin-top:64px;background:#16202e;color:#94a3b8;padding:52px 0 0;position:relative;overflow:hidden}
+footer::before{content:"";position:absolute;top:0;left:0;right:0;height:3px;
+  background:linear-gradient(90deg,var(--blue),#6ec6ff 35%,transparent 75%)}
+footer::after{content:"</>";position:absolute;right:-20px;top:6px;font-family:var(--font-mono);font-weight:600;
+  font-size:200px;color:rgba(255,255,255,.025);line-height:1;pointer-events:none}
+.foot-grid{display:grid;grid-template-columns:1.6fr 1fr 1fr 1fr;gap:36px;padding-bottom:40px;position:relative;z-index:1}
+.foot-brand .logo{color:#fff;margin-bottom:14px}
+.foot-brand p{font-size:13.5px;line-height:2;color:#64748b;max-width:300px}
+.foot-col h5{color:#e2e8f0;font-size:15px;font-weight:600;margin-bottom:16px}
+.foot-col ul{list-style:none;display:grid;gap:10px}
+.foot-col a{font-size:13.5px;color:#64748b;transition:all .18s;display:inline-flex;align-items:center;gap:6px}
+.foot-col a::before{content:"";width:0;height:1.5px;background:var(--blue);transition:width .2s}
+.foot-col a:hover{color:#6ec6ff}
+.foot-col a:hover::before{width:12px}
+.foot-bar{border-top:1px solid rgba(255,255,255,.07);padding:18px 0;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;font-size:12.5px;color:#475569}
+.foot-bar .icp{display:flex;gap:16px;flex-wrap:wrap}
+
+/* ── 动效 ── */
+.reveal{opacity:0;transform:translateY(20px);transition:opacity .6s cubic-bezier(.2,.7,.3,1),transform .6s cubic-bezier(.2,.7,.3,1)}
+.reveal.in{opacity:1;transform:none}
+@keyframes rise{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
+.crumb,.arc-head,.year-tabs{animation:rise .7s cubic-bezier(.2,.7,.3,1) both}
+.year-tabs{animation-delay:.08s}
+
+/* ── 响应式 ── */
+@media (max-width:1024px){
+  .submenu{display:none}
+  .foot-grid{grid-template-columns:1fr 1fr}
+}
+@media (max-width:768px){
+  .nav-menu,.nav-search{display:none}
+  .nav-burger{display:block}
+  .arc-hero{padding:32px 0 24px}
+  .arc-stats{width:100%}
+  .astat{flex:1;padding:14px 8px 12px}
+  .astat b{font-size:21px}
+  .arc-item{flex-wrap:wrap;gap:8px 12px;padding:12px 14px}
+  .arc-item .t{width:100%;flex:none}
+  .arc-item .cat{margin-left:44px}
+  .timeline{padding-left:24px}
+  .timeline::before{left:5px}
+  .year-block::before{left:-24px;width:11px;height:11px}
+  .foot-grid{grid-template-columns:1fr;gap:28px}
+  footer::after{font-size:120px}
+}
+</style>
+</head>
+<body>
+
+<div class="progress" id="progress"></div>
+
+<div class="nav-wrap">
+  <nav class="nav" id="nav">
+    <div class="wrap nav-inner">
+      <a class="logo" href="index.html"><span class="logo-mark">S</span>Stu<em>Flow</em></a>
+      <ul class="nav-menu">
+        <li><a href="index.html">首页</a></li>
+        <li><a href="#">软件资源</a></li>
+        <li><a href="#">软件使用</a></li>
+        <li>
+          <a href="category.html">代码编程
+            <svg class="car" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="m6 9 6 6 6-6"/></svg>
+          </a>
+          <div class="submenu">
+            <a href="#"><span class="ic" style="background:#409eff">WP</span><span class="tx"><b>WordPress</b><span>主题与插件开发 86 篇</span></span></a>
+            <a href="#"><span class="ic" style="background:#34c77b">JS</span><span class="tx"><b>JavaScript</b><span>ES 规范与工程实践 61 篇</span></span></a>
+            <a href="#"><span class="ic" style="background:#e6a23c">KT</span><span class="tx"><b>Kotlin / Android</b><span>协程与移动端开发 28 篇</span></span></a>
+            <a href="#"><span class="ic" style="background:#8b5cf6">C++</span><span class="tx"><b>C / C++</b><span>底层与性能优化 19 篇</span></span></a>
+            <a href="#"><span class="ic" style="background:#f43f5e">VUE</span><span class="tx"><b>Vue</b><span>组件设计与生态 24 篇</span></span></a>
+            <a href="#"><span class="ic" style="background:#0ea5e9">UNI</span><span class="tx"><b>UniApp</b><span>跨端开发笔记 12 篇</span></span></a>
+          </div>
+        </li>
+        <li><a href="#">汇编逆向</a></li>
+        <li><a href="#">运维</a></li>
+        <li><a href="#">关于本站</a></li>
+      </ul>
+      <label class="nav-search">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        <input type="text" placeholder="搜索文章…">
+        <kbd>Ctrl K</kbd>
+      </label>
+      <button class="nav-burger" id="burger" aria-label="菜单">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+      </button>
+    </div>
+  </nav>
+</div>
+
+<div class="drawer-mask" id="drawerMask"></div>
+<aside class="drawer" id="drawer">
+  <div class="d-head">
+    <a class="logo" href="index.html"><span class="logo-mark" style="width:30px;height:30px;font-size:14px">S</span>Stu<em>Flow</em></a>
+    <button class="d-close" id="drawerClose" aria-label="关闭">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>
+    </button>
+  </div>
+  <label class="d-search">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" style="color:var(--ink-3)"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+    <input type="text" placeholder="搜索文章…">
+  </label>
+  <a class="d-link" href="index.html">首页</a>
+  <a class="d-link" href="#">软件资源 <span class="n">92</span></a>
+  <a class="d-link" href="#">软件使用 <span class="n">37</span></a>
+  <a class="d-link" href="category.html">代码编程 <span class="n">74</span></a>
+  <a class="d-link" href="#">汇编逆向 <span class="n">31</span></a>
+  <a class="d-link" href="#">运维部署 <span class="n">45</span></a>
+  <a class="d-link" href="#">关于本站</a>
+</aside>
+
+<main class="wrap">
+  <section class="arc-hero">
+    <nav class="crumb">
+      <a href="index.html">首页</a><span class="sep">/</span>
+      <span class="cur">文章归档</span>
+    </nav>
+
+    <div class="arc-head">
+      <div>
+        <span class="kicker">Archive · 时间轴</span>
+        <h1>回望来路，<span class="hl">328 篇</span>踩下的脚印。</h1>
+        <p>按年份与月份整理的全站文章时间线。想找某个月写了什么、某个系列什么时候开的头，翻这里最快。</p>
+      </div>
+      <div class="arc-stats">
+        <div class="astat"><b>328</b><span>总文章</span></div>
+        <div class="astat"><b>1,024</b><span>总评论</span></div>
+        <div class="astat"><b>10</b><span>写作年份</span></div>
+      </div>
+    </div>
+
+    <!-- 年份锚点 -->
+    <div class="year-tabs" id="yearTabs">
+      <a class="ytab on" href="#y2026">2026<span class="n">86 篇</span></a>
+      <a class="ytab" href="#y2025">2025<span class="n">94 篇</span></a>
+      <a class="ytab" href="#y2024">2024<span class="n">71 篇</span></a>
+      <a class="ytab" href="#y2023">2023<span class="n">45 篇</span></a>
+      <a class="ytab" href="#y2022">2022<span class="n">32 篇</span></a>
+    </div>
+
+    <!-- 时间线 -->
+    <div class="timeline">
+
+      <div class="year-block reveal" id="y2026">
+        <div class="year-head"><h2>2026</h2><span class="cnt">共 <b>86</b> 篇 · 最新更新 10-09</span></div>
+
+        <div class="month-group">
+          <div class="mg-head">十月<span class="n">9 篇</span></div>
+          <a class="arc-item" href="single.html">
+            <span class="d">10-09</span>
+            <span class="pin-flag">置顶</span>
+            <span class="t">StuFlow 主题 v2.4 发布：全新卡片流首页、双端性能再提速 40%</span>
+            <span class="cat">WordPress</span>
+            <span class="cmt">86</span>
+          </a>
+          <a class="arc-item" href="single.html">
+            <span class="d">10-07</span>
+            <span class="t">Vite 8 深度实测：Rolldown 原生打包到底快了多少？</span>
+            <span class="cat">前端开发</span>
+            <span class="cmt">58</span>
+          </a>
+          <a class="arc-item" href="#">
+            <span class="d">10-05</span>
+            <span class="t">Windows 常驻效率工具清单：这 12 款让我回不去默认系统</span>
+            <span class="cat">软件资源</span>
+            <span class="cmt">97</span>
+          </a>
+          <a class="arc-item" href="#">
+            <span class="d">10-03</span>
+            <span class="t">Kotlin 协程在 Android 里的正确打开方式：结构化并发避坑</span>
+            <span class="cat">代码编程</span>
+            <span class="cmt">41</span>
+          </a>
+          <a class="arc-item" href="#">
+            <span class="d">10-01</span>
+            <span class="t">国庆不出门：把博客的图片管道全量迁到 AVIF 的踩坑记录</span>
+            <span class="cat">运维部署</span>
+            <span class="cmt">23</span>
+          </a>
+        </div>
+
+        <div class="month-group">
+          <div class="mg-head">九月<span class="n">8 篇</span></div>
+          <a class="arc-item" href="#">
+            <span class="d">09-29</span>
+            <span class="t">OllyDbg 入门实录：给一个老 crackme 动态下断的完整过程</span>
+            <span class="cat">汇编逆向</span>
+            <span class="cmt">29</span>
+          </a>
+          <a class="arc-item" href="#">
+            <span class="d">09-26</span>
+            <span class="t">Nginx 冷知识：这 5 个配置项让我的小站扛住了摸鱼高峰</span>
+            <span class="cat">运维部署</span>
+            <span class="cmt">41</span>
+          </a>
+          <a class="arc-item" href="#">
+            <span class="d">09-22</span>
+            <span class="t">给主题加一个不依赖插件的站点性能面板：SQL 查询数可视化</span>
+            <span class="cat">WordPress</span>
+            <span class="cmt">33</span>
+          </a>
+          <a class="arc-item" href="#">
+            <span class="d">09-18</span>
+            <span class="t">写了六年代码，我为什么又换回了机械键盘的静音红轴</span>
+            <span class="cat">随笔记</span>
+            <span class="cmt">64</span>
+          </a>
+        </div>
+      </div>
+
+      <div class="year-block reveal" id="y2025">
+        <div class="year-head"><h2>2025</h2><span class="cnt">共 <b>94</b> 篇 · 高产之年</span></div>
+        <div class="month-group">
+          <div class="mg-head">十二月<span class="n">12 篇</span></div>
+          <a class="arc-item" href="#">
+            <span class="d">12-28</span>
+            <span class="t">年度复盘：一年写了 94 篇文章，我到底图什么？</span>
+            <span class="cat">随笔记</span>
+            <span class="cmt">112</span>
+          </a>
+          <a class="arc-item" href="#">
+            <span class="d">12-14</span>
+            <span class="t">从 PHP 8.3 迁移到 8.4：属性钩子在主题里的三个妙用</span>
+            <span class="cat">WordPress</span>
+            <span class="cmt">27</span>
+          </a>
+          <a class="arc-item" href="#">
+            <span class="d">12-02</span>
+            <span class="t">白嫖 Cloudflare Workers 给小站做全球图片加速</span>
+            <span class="cat">运维部署</span>
+            <span class="cmt">49</span>
+          </a>
+        </div>
+        <div class="month-group">
+          <div class="mg-head">六月<span class="n">10 篇</span></div>
+          <a class="arc-item" href="#">
+            <span class="d">06-21</span>
+            <span class="t">逆向一个 2005 年的老软件注册算法：完整的算法还原笔记</span>
+            <span class="cat">汇编逆向</span>
+            <span class="cmt">87</span>
+          </a>
+          <a class="arc-item" href="#">
+            <span class="d">06-08</span>
+            <span class="t">UniApp 商城实战系列（四）：购物车状态管理的正确分层</span>
+            <span class="cat">代码编程</span>
+            <span class="cmt">31</span>
+          </a>
+        </div>
+        <div class="month-group">
+          <div class="mg-head">三月<span class="n">9 篇</span></div>
+          <a class="arc-item" href="#">
+            <span class="d">03-17</span>
+            <span class="t">Vue 3.5 的 useTemplateRef：终于和 $ref 时代说再见</span>
+            <span class="cat">代码编程</span>
+            <span class="cmt">38</span>
+          </a>
+          <a class="arc-item" href="#">
+            <span class="d">03-03</span>
+            <span class="t">把博客搜索从 MySQL LIKE 换成 Meilisearch：十分钟接入实录</span>
+            <span class="cat">运维部署</span>
+            <span class="cmt">52</span>
+          </a>
+        </div>
+      </div>
+
+      <div class="year-block reveal" id="y2024">
+        <div class="year-head"><h2>2024</h2><span class="cnt">共 <b>71</b> 篇</span></div>
+        <div class="month-group">
+          <div class="mg-head">十一月<span class="n">7 篇</span></div>
+          <a class="arc-item" href="#">
+            <span class="d">11-26</span>
+            <span class="t">给老笔记本装 Linux 当家庭服务器：系统选型与散热改造</span>
+            <span class="cat">运维部署</span>
+            <span class="cmt">66</span>
+          </a>
+          <a class="arc-item" href="#">
+            <span class="d">11-11</span>
+            <span class="t">WPOPT 插件 3.0：懒加载与预加载的平衡艺术</span>
+            <span class="cat">WordPress</span>
+            <span class="cmt">44</span>
+          </a>
+        </div>
+        <div class="month-group">
+          <div class="mg-head">五月<span class="n">8 篇</span></div>
+          <a class="arc-item" href="#">
+            <span class="d">05-20</span>
+            <span class="t">从零实现一个微型 React：三小时读懂 Fiber 的调度思想</span>
+            <span class="cat">前端开发</span>
+            <span class="cmt">93</span>
+          </a>
+          <a class="arc-item" href="#">
+            <span class="d">05-06</span>
+            <span class="t">SQLite 当博客主库的一年：崩溃次数与性能数据全公开</span>
+            <span class="cat">运维部署</span>
+            <span class="cmt">71</span>
+          </a>
+        </div>
+      </div>
+
+      <div class="year-block reveal" id="y2023">
+        <div class="year-head"><h2>2023</h2><span class="cnt">共 <b>45</b> 篇</span></div>
+        <div class="month-group">
+          <div class="mg-head">九月<span class="n">6 篇</span></div>
+          <a class="arc-item" href="#">
+            <span class="d">09-15</span>
+            <span class="t">Android 逆向入门：Frida hook 微信小程序的试错之路</span>
+            <span class="cat">汇编逆向</span>
+            <span class="cmt">102</span>
+          </a>
+          <a class="arc-item" href="#">
+            <span class="d">09-01</span>
+            <span class="t">开箱即用的 frida 脚本模板：日志、埋点与反调试对策</span>
+            <span class="cat">汇编逆向</span>
+            <span class="cmt">58</span>
+          </a>
+        </div>
+        <div class="month-group">
+          <div class="mg-head">二月<span class="n">4 篇</span></div>
+          <a class="arc-item" href="#">
+            <span class="d">02-14</span>
+            <span class="t">写给自己的情人节礼物：用 Canvas 做了一个粒子情书生成器</span>
+            <span class="cat">随笔记</span>
+            <span class="cmt">88</span>
+          </a>
+        </div>
+      </div>
+
+      <div class="year-block reveal" id="y2022">
+        <div class="year-head"><h2>2022</h2><span class="cnt">共 <b>32</b> 篇 · 建站元年</span></div>
+        <div class="month-group">
+          <div class="mg-head">十月<span class="n">5 篇</span></div>
+          <a class="arc-item" href="#">
+            <span class="d">10-16</span>
+            <span class="t">「本站开通了」：第一篇博文，以及为什么我要写博客</span>
+            <span class="cat">随笔记</span>
+            <span class="cmt">156</span>
+          </a>
+          <a class="arc-item" href="#">
+            <span class="d">10-02</span>
+            <span class="t">WordPress 从购买域名到上线：新手村通关流水账</span>
+            <span class="cat">WordPress</span>
+            <span class="cmt">203</span>
+          </a>
+        </div>
+      </div>
+
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="foot-grid">
+      <div class="foot-brand">
+        <a class="logo" href="index.html"><span class="logo-mark">S</span>Stu<em>Flow</em></a>
+        <p>生命潦草，我在弯腰。<br>一个记录 WordPress、前端与折腾笔记的个人小站，主题由站长亲手打造。</p>
+      </div>
+      <div class="foot-col">
+        <h5>栏目</h5>
+        <ul><li><a href="#">软件资源</a></li><li><a href="#">软件使用</a></li><li><a href="category.html">代码编程</a></li><li><a href="#">汇编逆向</a></li><li><a href="#">运维部署</a></li></ul>
+      </div>
+      <div class="foot-col">
+        <h5>站点</h5>
+        <ul><li><a href="#">关于本站</a></li><li><a href="#">留言建议</a></li><li><a href="archive.html">文章归档</a></li><li><a href="#">友情链接</a></li></ul>
+      </div>
+      <div class="foot-col">
+        <h5>订阅</h5>
+        <ul><li><a href="#">RSS 订阅</a></li><li><a href="#">微信公众号</a></li><li><a href="#">Telegram 频道</a></li></ul>
+      </div>
+    </div>
+    <div class="foot-bar">
+      <span>© 2016-2026 StuFlow · 保留所有权利</span>
+      <span class="icp"><span>蜀ICP备16029882号-1</span><span>公安备案 5101XXXXXXXXX号</span></span>
+    </div>
+  </div>
+</footer>
+
+<script>
+const progress=document.getElementById('progress'),nav=document.getElementById('nav');
+addEventListener('scroll',()=>{
+  const h=document.documentElement,max=h.scrollHeight-h.clientHeight;
+  progress.style.width=(h.scrollTop/max*100)+'%';
+  nav.classList.toggle('scrolled',h.scrollTop>10);
+},{passive:true});
+const drawer=document.getElementById('drawer'),mask=document.getElementById('drawerMask');
+const openDrawer=()=>{drawer.classList.add('open');mask.classList.add('open');document.body.style.overflow='hidden'};
+const closeDrawer=()=>{drawer.classList.remove('open');mask.classList.remove('open');document.body.style.overflow=''};
+document.getElementById('burger').addEventListener('click',openDrawer);
+document.getElementById('drawerClose').addEventListener('click',closeDrawer);
+mask.addEventListener('click',closeDrawer);
+
+/* 年份锚点高亮 */
+const ytabs=[...document.querySelectorAll('.ytab')];
+const years=ytabs.map(a=>document.getElementById(a.getAttribute('href').slice(1))).filter(Boolean);
+const spy=new IntersectionObserver(es=>{
+  es.forEach(e=>{
+    if(e.isIntersecting){
+      ytabs.forEach(a=>a.classList.toggle('on',a.getAttribute('href')==='#'+e.target.id));
+    }
+  });
+},{rootMargin:'-20% 0px -60% 0px'});
+years.forEach(y=>spy.observe(y));
+
+/* 滚动渐入 */
+const io=new IntersectionObserver(es=>es.forEach(e=>{
+  if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}
+}),{threshold:.08});
+document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
+</script>
+</body>
+</html>
