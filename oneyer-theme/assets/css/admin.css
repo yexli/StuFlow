@@ -1,0 +1,74 @@
+/* Oneyer 后台设置页 —— 与前台同源的蓝卡片风（色值后台专用硬编码，不依赖前台令牌） */
+.oneyer-admin{max-width:960px;margin-right:20px;font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif}
+
+/* 页头 */
+.oy-header{display:flex;align-items:center;gap:16px;background:linear-gradient(140deg,#123c7a,#2f7ce5 55%,#5fb2ff);
+  border-radius:14px;padding:22px 28px;color:#fff;margin:16px 0 0;box-shadow:0 12px 30px rgba(31,60,105,.22)}
+.oy-header__brand{display:flex;align-items:center;gap:16px}
+.oy-header__logo{width:46px;height:46px;border-radius:13px;background:rgba(8,24,52,.4);border:1px solid rgba(255,255,255,.3);
+  display:grid;place-items:center;font:800 22px Outfit,sans-serif;flex:none}
+.oy-header h1{font-size:21px;font-weight:700;margin:0 0 4px;padding:0;color:#fff}
+.oy-header p{margin:0;color:rgba(255,255,255,.85);font-size:13px}
+.oy-header__ver{margin-left:auto;font:600 12px Outfit,sans-serif;background:rgba(8,24,52,.4);
+  border:1px solid rgba(255,255,255,.25);border-radius:99px;padding:4px 13px;flex:none}
+
+/* 通知条（自有类名，不使用 WP .notice——部分后台脚本会搬动它们） */
+.oneyer-admin .oy-notice{display:flex;align-items:center;gap:10px;margin:16px 0 0;padding:12px 18px;
+  background:#f0f9eb;border:1px solid rgba(52,199,123,.4);border-left:4px solid var(--green,#34c77b);
+  border-radius:10px;font-size:13.5px;color:#2d6e4f}
+.oneyer-admin .oy-notice p{margin:0}
+.oneyer-admin .oy-notice__ok{flex:none;width:20px;height:20px;border-radius:50%;background:#34c77b;color:#fff;
+  display:grid;place-items:center;font-size:12px;font-weight:700}
+.oneyer-admin .oy-notice__x{margin-left:auto;border:none;background:none;cursor:pointer;color:#8a97a8;
+  font-size:16px;line-height:1;padding:2px 6px;border-radius:6px}
+.oneyer-admin .oy-notice__x:hover{color:#2d6e4f;background:rgba(52,199,123,.15)}
+
+/* 标签页 */
+.oy-tabs{display:flex;gap:6px;flex-wrap:wrap;margin:18px 0 0}
+.oy-tab{display:inline-flex;align-items:center;gap:7px;padding:9px 18px;border-radius:99px;font-size:14px;font-weight:500;
+  background:#fff;border:1px solid #dcdcde;color:#50575e;text-decoration:none;transition:all .15s}
+.oy-tab .dashicons{font-size:16px;width:16px;height:16px}
+.oy-tab:hover{border-color:#409eff;color:#409eff}
+.oy-tab.is-active{background:#409eff;border-color:#409eff;color:#fff;box-shadow:0 4px 12px rgba(64,158,255,.35)}
+.oy-tab:focus-visible{outline:2px solid #409eff;outline-offset:2px}
+
+/* 卡片 */
+.oy-form{margin-top:16px}
+.oy-card{background:#fff;border:1px solid #e6ebf2;border-radius:12px;padding:20px 24px;margin-bottom:16px;
+  box-shadow:0 2px 8px rgba(31,60,105,.05)}
+.oy-card__title{font-size:15px;font-weight:700;margin:0 0 14px;padding-left:11px;position:relative;color:#1f2d3d}
+.oy-card__title::before{content:"";position:absolute;left:0;top:4px;bottom:4px;width:4px;border-radius:2px;background:#409eff}
+
+/* 字段行 */
+.oy-field{display:grid;grid-template-columns:280px 1fr;gap:18px;padding:14px 0;border-top:1px dashed #eef2f7}
+.oy-field:first-of-type{border-top:0}
+.oy-field__label{font-weight:600;font-size:13.5px;color:#1f2d3d}
+.oy-field__desc{margin:5px 0 0;font-size:12.5px;color:#8a97a8;line-height:1.7}
+.oy-field__desc code{background:#f0f4f9;border-radius:4px;padding:1px 5px;font-size:11.5px}
+.oy-field__ctrl input[type=text],.oy-field__ctrl input[type=url],.oy-field__ctrl input[type=number],.oy-field__ctrl textarea{
+  width:100%;max-width:520px;border:1px solid #dcdcde;border-radius:8px;padding:8px 12px;font-size:13.5px;transition:all .15s}
+.oy-field__ctrl input:focus,.oy-field__ctrl textarea:focus{border-color:#409eff;box-shadow:0 0 0 3px rgba(64,158,255,.13);outline:none}
+.oy-field__ctrl textarea{line-height:1.8;resize:vertical;font-family:Consolas,"JetBrains Mono",monospace}
+.oy-field--checkbox .oy-field__ctrl{align-self:center}
+
+/* 开关 */
+.oy-switch{position:relative;display:inline-block;cursor:pointer}
+.oy-switch input[type=checkbox]{position:absolute;opacity:0;width:0;height:0}
+.oy-switch__track{display:block;width:44px;height:24px;border-radius:99px;background:#d3d7de;transition:background .18s;position:relative}
+.oy-switch__track::after{content:"";position:absolute;left:3px;top:3px;width:18px;height:18px;border-radius:50%;background:#fff;
+  box-shadow:0 1px 3px rgba(0,0,0,.25);transition:transform .18s}
+.oy-switch input:checked + .oy-switch__track{background:#409eff}
+.oy-switch input:checked + .oy-switch__track::after{transform:translateX(20px)}
+.oy-switch input:focus-visible + .oy-switch__track{box-shadow:0 0 0 3px rgba(64,158,255,.25)}
+
+/* 吸底保存条 */
+.oy-savebar{position:sticky;bottom:0;display:flex;align-items:center;gap:14px;background:#fff;
+  border:1px solid #e6ebf2;border-radius:12px;padding:14px 22px;box-shadow:0 -6px 24px rgba(31,60,105,.1);z-index:5}
+.oy-savebar__hint{font-size:12.5px;color:#8a97a8}
+.oy-savebar .oy-savebar__btn{margin-left:auto;border-radius:99px;padding:4px 34px;
+  background:#409eff;border-color:#409eff;box-shadow:0 5px 14px rgba(64,158,255,.35);cursor:pointer}
+.oy-savebar .oy-savebar__btn:hover{background:#2f6fd6;border-color:#2f6fd6}
+
+@media (max-width:900px){
+  .oy-field{grid-template-columns:1fr;gap:8px}
+}

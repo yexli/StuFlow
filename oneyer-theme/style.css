@@ -1,0 +1,19 @@
+/*
+Theme Name: Oneyer StuFlow
+Theme URI: https://github.com/yexli/StuFlow
+Author: Oneyer
+Author URI: https://github.com/yexli
+Description: 基于 StuFlow 静态原型实现的现代技术博客经典主题：毛玻璃导航、渐变卡片流、悬浮目录、时间线归档与免登录评论。全部功能仅依赖 WordPress 核心，无付费插件要求。
+Version: 1.0.0
+Requires at least: 6.0
+Requires PHP: 7.4
+License: GNU General Public License v2 or later
+License URI: https://www.gnu.org/licenses/gpl-2.0.html
+Text Domain: oneyer-stuflow
+Tags: blog, two-columns, right-sidebar, custom-menu, custom-logo, featured-images, translation-ready
+*/
+
+/*
+ * 主题全量样式位于 assets/css/main.css（由 functions.php 通过 wp_enqueue_style 加载）。
+ * 本文件仅保留主题头信息，请勿在此重复定义样式。
+ */
