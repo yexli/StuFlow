@@ -4,3 +4,5 @@
 
 # 本地试验目录（不入库）
 _pjax-plan/
+# 附带的安装包已改为 GitHub Release 单独发布
+oneyer.zip
