@@ -1,6 +1,6 @@
 <?php
 /**
- * Oneyer StuFlow · the_content 结构层过滤器（内容样式映射方案 S-01 ~ S-04）。
+ * ONEYER · the_content 结构层过滤器（内容样式映射方案 S-01 ~ S-04）。
  *
  * 优先级链：19 标题锚点 → 20 代码块包裹 → 21 表格包裹 → 22 提示框解析
  *（wpautop / do_shortcode 在 10/11 已完成，天然先于本链）。

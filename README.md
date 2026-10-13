@@ -1,6 +1,6 @@
 <div align="center">
 
-# Oneyer StuFlow
+# ONEYER
 
 **现代技术博客 WordPress 经典主题 · 源自 StuFlow 设计系统**
 
@@ -12,7 +12,7 @@
 [![License](https://img.shields.io/badge/License-GPL--2.0-cb4737.svg)](#-许可证)
 [![Plugin](https://img.shields.io/badge/%E4%BB%98%E8%B4%B9%E6%8F%92%E4%BB%B6-0%20%E4%BE%9D%E8%B5%96-34c77b.svg)](#%EF%B8%8F-%E4%B8%BB%E9%A2%98%E7%89%B9%E6%80%A7)
 
-![Oneyer StuFlow 主题截图](oneyer-theme/screenshot.png)
+![ONEYER 主题截图](oneyer-theme/screenshot.png)
 
 </div>
 
@@ -20,7 +20,7 @@
 
 ## 📖 简介
 
-**Oneyer StuFlow** 是一套面向个人技术博客的 WordPress 经典主题。设计以内容阅读为核心：
+**ONEYER** 是一套面向个人技术博客的 WordPress 经典主题。设计以内容阅读为核心：
 浅色底 + 品牌蓝 `#409eff`、半透明毛玻璃导航、渐变色卡片流、深色窗口式代码块，以及移动端优先的响应式细节。
 
 - **经典主题架构**：原生 PHP 模板 + 原生 JavaScript，**零构建工具、零框架、零付费插件依赖**
@@ -48,10 +48,10 @@
 ## 🚀 安装
 
 1. 下载本仓库 `oneyer-theme/` 目录的 ZIP（或 `git clone` 后打包）；
-2. WordPress 后台 →「外观 → 主题 → 安装主题 → 上传主题」→ 启用 **Oneyer StuFlow**；
+2. WordPress 后台 →「外观 → 主题 → 安装主题 → 上传主题」→ 启用 **ONEYER**；
 3. 「设置 → 固定链接」选择非「朴素」结构并保存一次。
 
-命令行方式：`wp theme install oneyer-stuflow.zip --activate`
+命令行方式：`wp theme install oneyer.zip --activate`
 
 ## ⚙️ 快速配置（5 步）
 

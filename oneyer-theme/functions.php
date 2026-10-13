@@ -1,6 +1,6 @@
 <?php
 /**
- * Oneyer StuFlow 主题启动文件。
+ * ONEYER 主题启动文件。
  *
  * 结构：
  *  1. 主题功能注册（setup / 资源加载 / 菜单兜底）

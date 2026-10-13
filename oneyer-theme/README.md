@@ -1,4 +1,4 @@
-# Oneyer StuFlow · WordPress 经典主题
+# ONEYER · WordPress 经典主题
 
 基于 StuFlow 静态原型（`oneyer/` 目录 8 个 HTML 单页）实现的现代技术博客 WordPress 经典主题。
 无构建工具、无付费插件依赖，全部功能基于 WordPress 核心。
@@ -17,7 +17,7 @@
 ## 安装
 
 1. 后台「外观 → 主题 → 安装主题 → 上传主题」，选择 `oneyer-stuflow.zip`。
-2. 启用「Oneyer StuFlow」。
+2. 启用「ONEYER」。
 3. （推荐）「设置 → 固定链接」选择除「朴素」外的任意结构并保存。
 
 回滚：切回原主题即可；主题不写库表、不删内容，友链数据保留在 `oy_friend_link` 文章类型中。

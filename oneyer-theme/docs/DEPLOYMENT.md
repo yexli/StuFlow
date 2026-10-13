@@ -1,4 +1,4 @@
-# Oneyer StuFlow · 部署文档
+# ONEYER · 部署文档
 
 ## 一、安装前准备
 
@@ -8,13 +8,13 @@
 
 ## 二、安装
 
-1. WordPress 后台 →「外观 → 主题 → 安装主题 → 上传主题」→ 选择 `oneyer-stuflow.zip` → 安装。
-2. 启用「Oneyer StuFlow」。
+1. WordPress 后台 →「外观 → 主题 → 安装主题 → 上传主题」→ 选择 `oneyer.zip` → 安装。
+2. 启用「ONEYER」。
 3. 前台检查：首页、任意文章、任意分类、搜索、404。
 
 > 命令行方式（可选）：
 > ```bash
-> wp theme install oneyer-stuflow.zip --activate
+> wp theme install oneyer.zip --activate
 > ```
 
 ## 三、安装后配置清单（按顺序）
@@ -41,7 +41,7 @@
 ### 回滚
 1. 外观 → 主题 → 启用原主题，完成。文章/分类/评论/页面/友链数据全部保留。
 2. 清理缓存插件缓存。
-3. 如需彻底移除：外观 → 主题 → 删除 Oneyer StuFlow。友链数据（`oy_friend_link` 文章类型）仍保留在数据库中，重新启用主题即恢复显示；如需彻底清除，用 `wp post list --post_type=oy_friend_link` + `wp post delete` 处理。
+3. 如需彻底移除：外观 → 主题 → 删除 ONEYER。友链数据（`oy_friend_link` 文章类型）仍保留在数据库中，重新启用主题即恢复显示；如需彻底清除，用 `wp post list --post_type=oy_friend_link` + `wp post delete` 处理。
 
 ## 五、主题更新
 
