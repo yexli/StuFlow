@@ -54,25 +54,26 @@ $oy_featured = ( ! $oy_is_static_front || 1 === $oy_paged ) ? oneyer_featured_po
 			<?php endif; ?>
 		</div>
 
-		<!-- 分类胶囊：服务端筛选（点击进入分类归档） -->
+		<!-- 分类胶囊：首页=AJAX 就地预览（no-pjax 逃生舱，URL 不变）；无 JS 时原生进分类页 -->
 		<?php if ( oneyer_opt_checked( 'oneyer_show_chips' ) ) : ?>
 		<div class="chips" id="chips">
-			<a class="chip<?php echo ( is_home() || $oy_is_static_front ) && ! is_category() ? ' on' : ''; ?>" href="<?php echo esc_url( home_url( '/' ) ); ?>"><span class="dot"></span>全部</a>
+			<a class="chip no-pjax<?php echo ( is_home() || $oy_is_static_front ) && ! is_category() ? ' on' : ''; ?>" data-cat="0" href="<?php echo esc_url( home_url( '/' ) ); ?>"><span class="dot"></span>全部</a>
 			<?php
 			$oy_current_cat = is_category() ? get_queried_object_id() : 0;
 			$oy_chip_cats   = get_categories( array( 'hide_empty' => true, 'number' => 10 ) );
-				foreach ( $oy_chip_cats as $oy_cc ) {
-					printf(
-						'<a class="chip%1$s" href="%2$s"><span class="dot"></span>%3$s<span class="cnt">%4$s</span></a>',
-						$oy_current_cat === $oy_cc->term_id ? ' on' : '',
-						esc_url( get_category_link( $oy_cc ) ),
-						esc_html( $oy_cc->name ),
-						esc_html( number_format_i18n( $oy_cc->count ) )
-					);
-				}
-				?>
-			</div>
-			<?php endif; ?>
+			foreach ( $oy_chip_cats as $oy_cc ) {
+				printf(
+					'<a class="chip no-pjax%1$s" data-cat="%5$d" href="%2$s"><span class="dot"></span>%3$s<span class="cnt">%4$s</span></a>',
+					$oy_current_cat === $oy_cc->term_id ? ' on' : '',
+					esc_url( get_category_link( $oy_cc ) ),
+					esc_html( $oy_cc->name ),
+					esc_html( number_format_i18n( $oy_cc->count ) ),
+					(int) $oy_cc->term_id
+				);
+			}
+			?>
+		</div>
+		<?php endif; ?>
 
 		<?php
 		/**
@@ -93,7 +94,7 @@ $oy_featured = ( ! $oy_is_static_front || 1 === $oy_paged ) ? oneyer_featured_po
 					$oy_f_cat  = $oy_f_cats ? $oy_f_cats[0] : null;
 					$oy_f_pair = oneyer_gradients()[ oneyer_grad_class( $oy_f_cat ? $oy_f_cat->slug : 'featured' ) ];
 					?>
-		<article class="featured">
+		<article class="featured" id="oyFeatured">
 			<div class="featured-media">
 				<?php if ( has_post_thumbnail() ) : ?>
 				<img src="<?php echo esc_url( get_the_post_thumbnail_url( get_the_ID(), 'oneyer-card' ) ); ?>" alt="<?php echo esc_attr( the_title_attribute( array( 'echo' => false ) ) ); ?>" loading="lazy">
@@ -143,7 +144,7 @@ $oy_featured = ( ! $oy_is_static_front || 1 === $oy_paged ) ? oneyer_featured_po
 		<?php if ( 1 === $oy_paged || $oy_paged > 1 ) : ?>
 		<div class="section-head reveal">
 			<span class="bar" aria-hidden="true"></span>
-			<div><h3>最新文章</h3><div class="sub">Latest Posts</div></div>
+			<div><h3 id="gridTitle">最新文章</h3><div class="sub" id="gridSub">Latest Posts</div></div>
 		</div>
 		<?php endif; ?>
 

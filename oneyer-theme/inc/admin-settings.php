@@ -44,7 +44,7 @@ function oneyer_settings_registry() {
 				),
 				'文章列表' => array(
 					'oneyer_show_chips'  => array( 'label' => '显示分类筛选条', 'type' => 'checkbox', 'desc' => '文章网格上方的分类胶囊。' ),
-					'oneyer_home_ppp'    => array( 'label' => '网格每页篇数', 'type' => 'number', 'desc' => '首页主循环 posts_per_page，建议 6/9/12。' ),
+					'oneyer_home_ppp'    => array( 'label' => '首页每页/分类预览条数', 'type' => 'number', 'desc' => '首页网格每页条数 = 点分类胶囊就地预览的条数（共用）。桌面端 3 列，建议 3 的倍数：6/9/12。' ),
 					'oneyer_loadmore_pp' => array( 'label' => '加载更多每次追加', 'type' => 'number', 'desc' => 'AJAX 追加的文章条数。' ),
 				),
 				'下方混排区' => array(
@@ -264,6 +264,11 @@ function oneyer_admin_save() {
 					$value = esc_url_raw( $raw );
 					break;
 				case 'number':
+					/* 留空 = 未配置：删除该键让消费点走默认值（写 0 会覆盖默认并产生 1 条/页这类破坏）。 */
+					if ( '' === trim( $raw ) ) {
+						remove_theme_mod( $key );
+						continue 2;
+					}
 					$value = (string) min( 9999, absint( $raw ) );
 					break;
 				case 'checkbox':

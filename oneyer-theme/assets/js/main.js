@@ -293,7 +293,7 @@
 			var pager = $('#homePager', ctx);
 			var maxPages = parseInt(loadWrap.getAttribute('data-max'), 10) || 1;
 			var found = parseInt(loadWrap.getAttribute('data-found'), 10) || 0;
-			var perPage = parseInt(loadWrap.getAttribute('data-per-page'), 10) || 9;
+			var shown = $$('#grid .card', ctx).length; /* 以实际卡片数计提示，兼容追加条数设置 */
 			var current = 1;
 
 			// 有 JS 才切换到加载更多模式；无 JS 时保留常规分页。
@@ -326,13 +326,16 @@
 							current++;
 							var tmp = document.createElement('div');
 							tmp.innerHTML = json.data.html;
+							var added = 0;
 							// 仅移动元素节点，跳过响应中的空白文本节点。
 							$$('article.card', tmp).forEach(function (card) {
 								card.style.animation = 'rise .55s both';
 								grid.appendChild(card);
+								added++;
 							});
+							shown += Math.min(added, found - shown);
 							if (hint) {
-								hint.textContent = '已展示 ' + Math.min(current * perPage, found) + ' / ' + found + ' 篇';
+								hint.textContent = '已展示 ' + shown + ' / ' + found + ' 篇';
 							}
 							if (json.data.done || current >= maxPages) {
 								btn.textContent = '— 已经到底啦 —';
@@ -351,6 +354,7 @@
 				});
 			}
 		}
+		if (window.ONEYER_HOMECAT && window.ONEYER_HOMECAT.mount) window.ONEYER_HOMECAT.mount(ctx);
 	}
 
 	/* ═══════════════ 导出与首挂 ═══════════════ */

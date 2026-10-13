@@ -1409,3 +1409,13 @@ html:not(.js) .pjax-bar{display:none}
   body{background:#fff}
   footer{background:#fff;color:#333}
 }
+
+/* 首页分类 AJAX 预览（首页分类AJAX预览方案） */
+.oy-hidden{display:none!important}
+#grid-filter{animation:rise .5s both}
+#grid-filter.is-loading{opacity:.45;transition:opacity .15s}
+#grid-filter .load-wrap{display:flex;flex-direction:column;align-items:center;gap:12px;margin:46px 0 10px}
+#grid-filter a.loadmore{display:inline-flex;align-items:center;gap:9px;padding:13px 44px;border-radius:99px;
+  border:1.5px solid var(--blue);color:var(--blue);font-size:15px;font-weight:600;
+  background:rgba(255,255,255,.7);transition:all .2s;text-decoration:none}
+#grid-filter a.loadmore:hover{background:var(--blue);color:#fff;box-shadow:0 8px 22px rgba(64,158,255,.35);transform:translateY(-2px)}

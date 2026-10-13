@@ -79,6 +79,7 @@ function oneyer_assets() {
 	wp_enqueue_script( 'oneyer-main', get_theme_file_uri( '/assets/js/main.js' ), array(), (string) filemtime( $js ), true );
 	/* Pjax 渐进增强导航（依赖 main.js：ONEYER_UI.init / closeDrawer 由其暴露） */
 	wp_enqueue_script( 'oneyer-pjax', get_theme_file_uri( '/assets/js/pjax.js' ), array( 'oneyer-main' ), (string) filemtime( get_theme_file_path( 'assets/js/pjax.js' ) ), true );
+	wp_enqueue_script( 'oneyer-homecat', get_theme_file_uri( '/assets/js/homecat.js' ), array( 'oneyer-main' ), (string) filemtime( get_theme_file_path( 'assets/js/homecat.js' ) ), true );
 
 	wp_localize_script( 'oneyer-main', 'ONEYER', array(
 		'ajax'  => admin_url( 'admin-ajax.php' ),
@@ -98,7 +99,8 @@ function oneyer_pre_get_posts( $query ) {
 		return;
 	}
 	if ( $query->is_home() || $query->is_category() || $query->is_tag() || $query->is_author() || $query->is_date() ) {
-		$query->set( 'posts_per_page', $query->is_home() ? max( 1, (int) oneyer_opt( 'oneyer_home_ppp', '9' ) ) : 9 );
+		$ppp = max( 1, (int) oneyer_opt( 'oneyer_home_ppp', '9' ) );
+		$query->set( 'posts_per_page', ( $query->is_home() || $query->is_category() ) ? $ppp : 9 );
 		$query->set( 'ignore_sticky_posts', true );
 	}
 	if ( $query->is_search() ) {
@@ -1047,3 +1049,51 @@ function oneyer_logo_html( $size = 36, $extra_class = '' ) {
 		esc_attr( $cls )
 	);
 }
+
+/* -------------------------------------------------------------------------
+ * 首页分类 AJAX 预览：返回某分类前 N 条卡片 HTML + 元信息（首页分类AJAX预览方案 T1）。
+ * N 与首页主循环共用 oneyer_home_ppp；分类态不含置顶（配合前端隐藏置顶大卡）。
+ * ---------------------------------------------------------------------- */
+function oneyer_homecat_ajax() {
+	check_ajax_referer( 'oneyer', 'nonce' );
+
+	$cat = isset( $_POST['cat'] ) ? absint( $_POST['cat'] ) : 0;
+	if ( $cat < 1 || ! term_exists( $cat, 'category' ) ) {
+		wp_send_json_error( 'bad cat', 400 );
+	}
+
+	$term = get_term( $cat, 'category' );
+	if ( ! $term || is_wp_error( $term ) ) {
+		wp_send_json_error( 'bad term', 400 );
+	}
+
+	$n     = max( 1, (int) oneyer_opt( 'oneyer_home_ppp', '9' ) );
+	$query = new WP_Query( array(
+		'cat'                 => $cat,
+		'post_type'           => 'post',
+		'post_status'         => 'publish',
+		'posts_per_page'      => $n,
+		'ignore_sticky_posts' => true,  /* 分类态无置顶 */
+		'no_found_rows'       => false, /* 需要 found 判断是否超 N 条 */
+	) );
+
+	ob_start();
+	if ( $query->have_posts() ) {
+		while ( $query->have_posts() ) {
+			$query->the_post();
+			get_template_part( 'template-parts/post-card' );
+		}
+		wp_reset_postdata();
+	}
+	$html = ob_get_clean();
+
+	wp_send_json_success( array(
+		'html'     => $html,
+		'found'    => (int) $query->found_posts,
+		'per_page' => $n,
+		'name'     => $term->name,
+		'cat_url'  => get_category_link( $term ),
+	) );
+}
+add_action( 'wp_ajax_oneyer_homecat', 'oneyer_homecat_ajax' );
+add_action( 'wp_ajax_nopriv_oneyer_homecat', 'oneyer_homecat_ajax' );
