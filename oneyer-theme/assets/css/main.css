@@ -1419,3 +1419,6 @@ html:not(.js) .pjax-bar{display:none}
   border:1.5px solid var(--blue);color:var(--blue);font-size:15px;font-weight:600;
   background:rgba(255,255,255,.7);transition:all .2s;text-decoration:none}
 #grid-filter a.loadmore:hover{background:var(--blue);color:#fff;box-shadow:0 8px 22px rgba(64,158,255,.35);transform:translateY(-2px)}
+
+/* 分类/归档页：移除区块标题后横幅与网格的间距补偿 */
+.cat-hero .grid,.cat-hero .empty-state{margin-top:26px}

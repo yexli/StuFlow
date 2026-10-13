@@ -74,11 +74,6 @@ foreach ( $oy_comments_q->posts as $oy_pid ) {
 		</div>
 		<?php endif; ?>
 
-		<div class="section-head">
-			<span class="bar" aria-hidden="true"></span>
-			<div><h3><?php echo esc_html( $oy_cat->name ); ?>下的文章</h3><div class="sub">All Posts</div></div>
-		</div>
-
 		<?php if ( have_posts() ) : ?>
 		<div class="grid" id="grid">
 			<?php
