@@ -20,7 +20,7 @@ while ( have_posts() ) :
 	$oy_share_on = oneyer_opt_checked( 'oneyer_show_share' );
 	?>
 
-<div class="article-layout<?php echo $oy_toc_on ? '' : ' no-toc'; ?>">
+<div class="article-layout<?php echo $oy_toc_on ? '' : ' no-toc'; ?>" id="oneyer-main">
 	<!-- 主栏 -->
 	<div>
 		<nav class="crumb" aria-label="面包屑">

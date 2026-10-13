@@ -56,7 +56,7 @@ $oy_comments    = (int) wp_count_comments()->approved;
 $oy_newest      = $oy_first = null;
 ?>
 
-<main class="wrap">
+<main class="wrap" id="oneyer-main">
 	<section class="arc-hero">
 		<nav class="crumb" aria-label="面包屑">
 			<a href="<?php echo esc_url( home_url( '/' ) ); ?>">首页</a><span class="sep">/</span>

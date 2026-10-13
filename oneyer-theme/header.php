@@ -15,6 +15,7 @@
 <?php wp_body_open(); ?>
 
 <div class="progress" id="progress"></div>
+<div class="pjax-bar" aria-hidden="true"></div>
 
 <div class="nav-wrap">
   <nav class="nav" id="nav" aria-label="主导航">

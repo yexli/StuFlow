@@ -77,6 +77,8 @@ function oneyer_assets() {
 
 	$js = get_theme_file_path( 'assets/js/main.js' );
 	wp_enqueue_script( 'oneyer-main', get_theme_file_uri( '/assets/js/main.js' ), array(), (string) filemtime( $js ), true );
+	/* Pjax 渐进增强导航（依赖 main.js：ONEYER_UI.init / closeDrawer 由其暴露） */
+	wp_enqueue_script( 'oneyer-pjax', get_theme_file_uri( '/assets/js/pjax.js' ), array( 'oneyer-main' ), (string) filemtime( get_theme_file_path( 'assets/js/pjax.js' ) ), true );
 
 	wp_localize_script( 'oneyer-main', 'ONEYER', array(
 		'ajax'  => admin_url( 'admin-ajax.php' ),

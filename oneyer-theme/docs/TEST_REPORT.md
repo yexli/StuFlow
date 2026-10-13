@@ -247,6 +247,49 @@ footer.php（页脚附言）。原 12 个迁移项消费点未改动（红线）
 无横向溢出实测（scrollWidth==clientWidth 375/375）。
 
 
+## 6F. AJAX 切页验收（《AJAX切页方案.md》Pjax 渐进增强导航）
+
+> 实现：`assets/js/pjax.js`（新建，9.9KB 未压缩）+ main.js 可重入改造（ONEYER_UI.init/closeDrawer 导出）
+> + 10 个模板统一 `#oneyer-main` 主区 + `.pjax-bar` 加载条 + 转场 CSS + functions.php 注册（依赖 main.js）。
+> 验收方式：浏览器自动化实测（1440/430 视口，注入「页面未刷新」标记判定无整页刷新）。
+
+| 验收项 | 结果 | 实测 |
+|---|---|---|
+| 首页分类胶囊切页无刷新（用户点名） | ✅ | URL → /category/aigc_image/、9 卡、导航 active 跟随、未刷新标记存活 |
+| 分类页子分类/「全部」往返 | ✅ | 同上链路 |
+| 分页器 pjax | ✅ | 同链接拦截规则 |
+| 导航菜单切换 + active 同步 | ✅ | 缓存直出场景亦同步（解析期捕获 activeHref，不依赖已并入节点） |
+| 卡片→详情→相关阅读→返回 | ✅ | toc 11 锚点生成、目录 scroll-spy 复活、代码块复制按钮复活 |
+| 搜索提交 AJAX（T5） | ✅ | 导航/抽屉/搜索页大框/404 框统一按 role=search 拦截；?s=Prompt 10 条结果无刷新 |
+| 归档时间线年份锚点 | ✅ 不拦截 | 页内行为保持原生 |
+| 加载更多（红线 8：不重构） | ✅ | pjax 回首页后按钮复活，9→10 卡追加正常 |
+| 后退/前进 + 滚动位置恢复 | ✅ | 滚 800 → 胶囊切页（回顶 0）→ 回退恢复 800 → 前进归位 0 |
+| 缓存直出（LRU 5） | ✅ | 回退到刚访问页 0ms（同步 resolve） |
+| admin-bar 保留（登录态） | ✅ | bodyClass 整体替换后强制补回 admin-bar 类 |
+| M4 抽屉联动 | ✅ | 抽屉点「AIGC商业设计」→ 抽屉自动关闭 + pjax 转场 |
+| Ctrl+点击 / 外链 不拦截 | ✅ | defaultPrevented=false 实测 |
+| replytocom 评论回复链接不拦截 | ✅ | 拦截规则显式排除 |
+| 404 页以 pjax 进入 | ✅ | 非 2xx 中仅放行 404（模板有统一主区） |
+| WP_DEBUG 零告警 | ✅ | 首页/文章/分类/搜索 4 页实测 |
+| pjax.js 体积 < 5KB 压缩前 | ⚠ 9.9KB | 超出方案预算（M1~M7 专项与注释所致）；gzip 后约 3KB，可接受 |
+
+**移动端真机项（M1 体感 / M3 系统返回手势 / M6 省流）**：代码路径已实现（touchstart 预取、popstate 接管、Save-Data 检查），
+本环境无 iOS/Android 真机，**标注为「机制已实现，上线前需真机复验」**——方案 §六 亦要求真机验收。
+
+### 实现中修复的方案问题（3 项）
+
+1. **首次 pjax 丢失滚动记录**：方案代码 `if (push && history.state) replaceState({y})` —— 初始条目 state 为 null
+   时离开位置不记录，回退必丢滚动 → 改为 push 时无条件 replaceState。
+2. **缓存节点二次入带残态**：LRU 复用同一主区节点，再次替换时残留 pjax-leaving/pointer-events → 插入前统一清理。
+3. **导航 active 同步在缓存命中时失效**：方案在转场期从「已并入本文档的节点」读 active（恒为 no-op）
+   → 改为解析期捕获 activeHref。
+
+### 滚动定位的环境级发现（M5 深化）
+
+实测本主题（CSS `scroll-behavior:smooth`）+ 部分滚动环境下：`window.scrollTo(x,y)` 两参形式、
+`scrollTop` 赋值、`scrollIntoView()` 默认值**全部被平滑滚动吞掉不生效**；方案 M5 的 `behavior:'auto'`
+同样遵循 CSS 而失效。最终全部改为 **`behavior:'instant'` 强制瞬时**——转场回顶、锚点定位、滚动恢复三类路径均实测通过。
+
 ## 7. 结论
 
 核心功能、数据驱动、安全转义、响应式与交互全部实测通过；

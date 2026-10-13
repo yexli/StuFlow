@@ -14,7 +14,7 @@ $oy_time  = timer_stop( 3, false );
 $oy_hot_tags = get_tags( array( 'orderby' => 'count', 'order' => 'DESC', 'number' => 5, 'hide_empty' => true ) );
 ?>
 
-<main class="wrap">
+<main class="wrap" id="oneyer-main">
 	<!-- 搜索头部 -->
 	<section class="search-hero">
 		<div class="sh-kicker">Search · 全站检索</div>

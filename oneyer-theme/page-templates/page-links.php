@@ -33,7 +33,7 @@ $oy_hint  = oneyer_opt( 'oneyer_links_hint', '蓝底白字「' . mb_substr( get_
 $oy_has_content = trim( get_the_content() );
 ?>
 
-<main class="wrap">
+<main class="wrap" id="oneyer-main">
 	<section class="links-hero">
 		<nav class="crumb" aria-label="面包屑">
 			<a href="<?php echo esc_url( home_url( '/' ) ); ?>">首页</a><span class="sep">/</span>

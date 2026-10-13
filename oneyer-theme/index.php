@@ -33,7 +33,7 @@ $oy_max      = (int) $oy_query->max_num_pages;
 $oy_featured = ( ! $oy_is_static_front || 1 === $oy_paged ) ? oneyer_featured_post_id() : 0;
 ?>
 
-<main class="wrap">
+<main class="wrap" id="oneyer-main">
 	<!-- Hero -->
 	<section class="hero">
 		<div class="hero-top">

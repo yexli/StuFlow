@@ -63,7 +63,7 @@ $oy_links_pg = oneyer_template_page_url( 'page-templates/page-links.php' );
 $oy_sub_count = 1 + ( $oy_wechat ? 1 : 0 ) + ( $oy_telegram ? 1 : 0 );
 ?>
 
-<main class="wrap">
+<main class="wrap" id="oneyer-main">
 	<div class="main-col">
 		<section class="about-hero">
 			<nav class="crumb" aria-label="面包屑">

@@ -1382,6 +1382,20 @@ img.avatar,.avatar img{border-radius:13px;display:block}
   .nf-visual{min-height:280px;order:-1}
 }
 
+/* ── Pjax 转场（AJAX切页方案） ── */
+#oneyer-main{transition:opacity 150ms ease}
+#oneyer-main.pjax-leaving{opacity:0}
+#oneyer-main.pjax-entering{opacity:0;transition:opacity 250ms ease}
+.pjax-bar{position:fixed;top:0;left:0;height:2.5px;width:0;z-index:400;
+  background:linear-gradient(90deg,#409eff,#6ec6ff);box-shadow:0 0 10px rgba(64,158,255,.6);
+  transition:width .3s ease,opacity .2s ease;opacity:0;pointer-events:none}
+.pjax-bar.is-loading{opacity:1;transition:width .4s ease}
+@media (prefers-reduced-motion: reduce){
+  #oneyer-main{transition:none}
+}
+/* 无 JS 时不渲染任何 pjax 元素 */
+html:not(.js) .pjax-bar{display:none}
+
 /* 减少动态效果偏好 */
 @media (prefers-reduced-motion: reduce){
   html{scroll-behavior:auto}
