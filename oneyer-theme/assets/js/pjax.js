@@ -67,12 +67,14 @@
 		var main = doc.getElementById(MAIN_ID);
 		if (!main) return null; // 目标页没有主区（异常模板）→ 触发兜底
 		var na = doc.querySelector('.nav-menu > li > a.active');
+		var da = doc.querySelector('.drawer a.d-link.on');
 		return {
 			main: main,
 			title: doc.title || '',
 			bodyClass: doc.body.getAttribute('class') || '',
-			/* 解析期捕获导航 active href：缓存节点复用时仍能正确同步（不依赖已并入本文档的节点） */
-			activeHref: na ? na.getAttribute('href') : null
+			/* 解析期捕获导航/抽屉 active href：缓存节点复用时仍能正确同步（不依赖已并入本文档的节点） */
+			activeHref: na ? na.getAttribute('href') : null,
+			drawerActive: da ? da.getAttribute('href') : null
 		};
 	}
 	function syncNav(activeHref) {
@@ -81,6 +83,15 @@
 		if (activeHref) {
 			var t = document.querySelector('.nav-menu a[href="' + activeHref.replace(/"/g, '\\"') + '"]');
 			if (t) t.classList.add('active');
+		}
+	}
+	/* 抽屉菜单项高亮同步（抽屉在主区外，pjax 后不替换，需手动跟随） */
+	function syncDrawer(drawerActive) {
+		var links = document.querySelectorAll('.drawer a.d-link');
+		[].forEach.call(links, function (l) { l.classList.remove('on'); });
+		if (drawerActive) {
+			var t = document.querySelector('.drawer a.d-link[href="' + drawerActive.replace(/"/g, '\\"') + '"]');
+			if (t) t.classList.add('on');
 		}
 	}
 
@@ -129,6 +140,7 @@
 
 		var doSwap = function () {
 			syncNav(doc.activeHref);
+			syncDrawer(doc.drawerActive);
 			/* 缓存 LRU 会复用同一节点：清掉上次转场可能残留的状态 */
 			doc.main.classList.remove('pjax-leaving', 'pjax-entering');
 			doc.main.style.pointerEvents = '';
