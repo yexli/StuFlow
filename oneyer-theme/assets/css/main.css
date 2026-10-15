@@ -1437,3 +1437,43 @@ html.js::-webkit-scrollbar{width:0;height:0;display:none}
 
 /* 分类/归档页：移除区块标题后横幅与网格的间距补偿 */
 .cat-hero .grid,.cat-hero .empty-state{margin-top:26px}
+
+/* ── 移动抽屉视觉升级：菜单行卡片化 + 统计条 + 快捷页卡 ── */
+.drawer .d-head{padding-bottom:14px;border-bottom:1px solid var(--line);margin-bottom:14px}
+.drawer .d-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:14px}
+.drawer .d-stat{background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:8px 4px;text-align:center;transition:all .18s}
+.drawer .d-stat:hover{border-color:rgba(64,158,255,.4);background:var(--blue-soft)}
+.drawer .d-stat b{display:block;font-family:var(--font-en);font-size:15px;font-weight:800;color:var(--ink);line-height:1.2}
+.drawer .d-stat b i{font-style:normal;font-size:10px;color:var(--blue);vertical-align:2px}
+.drawer .d-stat span{display:block;font-size:10.5px;color:var(--ink-3);margin-top:2px}
+.drawer .d-quick{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px;padding-top:14px;border-top:1px dashed var(--line)}
+.drawer .d-qcard{display:flex;align-items:center;gap:9px;padding:11px 12px;border-radius:10px;
+  background:var(--bg);border:1px solid var(--line);font-size:13px;font-weight:500;color:var(--ink-2);transition:all .18s}
+.drawer .d-qcard:hover{border-color:rgba(64,158,255,.4);color:var(--blue);background:var(--blue-soft);transform:translateY(-1px)}
+.drawer .d-qic{flex:none;width:26px;height:26px;border-radius:8px;background:var(--blue-soft);color:var(--blue);display:grid;place-items:center}
+.drawer .d-link{display:flex;align-items:center;gap:11px;padding:11px 12px;border-radius:11px;transition:all .18s}
+.drawer .d-ic{flex:none;width:30px;height:30px;border-radius:9px;display:grid;place-items:center;
+  color:#fff;font-size:12.5px;font-weight:700;font-family:var(--font-en);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.3),0 3px 8px rgba(31,60,105,.14);transition:transform .25s cubic-bezier(.34,1.56,.64,1)}
+.drawer .d-link:hover .d-ic{transform:rotate(-8deg) scale(1.08)}
+.drawer .d-t{flex:1;min-width:0;font-size:14px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.drawer .d-n{flex:none;font-family:var(--font-en);font-size:11px;font-weight:600;color:var(--blue);
+  background:var(--blue-soft);border-radius:99px;padding:2px 9px}
+.drawer .d-ar{flex:none;color:var(--ink-3);opacity:0;transform:translateX(-4px);transition:all .18s}
+.drawer .d-link:hover{transform:translateX(2px)}
+.drawer .d-link:hover .d-ar{opacity:1;transform:none;color:var(--blue)}
+.drawer .d-link.on .d-ic{box-shadow:0 0 0 2px var(--blue-soft),0 3px 8px rgba(31,60,105,.14)}
+/* 抽屉打开时菜单项渐入（逐项错峰） */
+.drawer.open .d-stats,.drawer.open .d-quick{animation:rise .45s both}
+.drawer.open .d-link{animation:rise .45s both}
+.drawer.open .d-link:nth-child(1){animation-delay:.03s}
+.drawer.open .d-link:nth-child(2){animation-delay:.06s}
+.drawer.open .d-link:nth-child(3){animation-delay:.09s}
+.drawer.open .d-link:nth-child(4){animation-delay:.12s}
+.drawer.open .d-link:nth-child(5){animation-delay:.15s}
+.drawer.open .d-link:nth-child(6){animation-delay:.18s}
+.drawer.open .d-link:nth-child(7){animation-delay:.21s}
+.drawer.open .d-link:nth-child(8){animation-delay:.24s}
+@media (prefers-reduced-motion: reduce){
+  .drawer.open .d-link,.drawer.open .d-stats,.drawer.open .d-quick{animation:none}
+}

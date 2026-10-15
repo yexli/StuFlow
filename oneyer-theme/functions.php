@@ -635,10 +635,27 @@ class Oneyer_Menu_Walker extends Walker_Nav_Menu {
  */
 class Oneyer_Drawer_Walker extends Walker_Nav_Menu {
 
+	private $oy_idx = 0;
+
 	public function start_el( &$output, $item, $depth = 0, $args = null, $id = 0 ) {
 		$classes = empty( $item->classes ) ? array() : (array) $item->classes;
 		$is_cur  = in_array( 'current-menu-item', $classes, true ) || in_array( 'current_page_item', $classes, true );
-		$output .= '<a class="d-link' . ( $is_cur ? ' on' : '' ) . '" href="' . esc_url( $item->url ) . '">' . esc_html( apply_filters( 'the_title', $item->title, $item->ID ) );
+
+		/* 图标方块：菜单项无分类数据，按序取品牌色板，字符取标题首字 */
+		$palette = array( '#409eff,#2f6fd6', '#34c77b,#1f8f5a', '#e6a23c,#cf8a1d', '#8b5cf6,#7c3aed', '#f43f5e,#be123c', '#0ea5e9,#0369a1' );
+		$color   = $palette[ $this->oy_idx % count( $palette ) ];
+		$this->oy_idx++;
+
+		$title = wp_strip_all_tags( apply_filters( 'the_title', $item->title, $item->ID ) );
+		$icon  = function_exists( 'oneyer_logo_first_char' ) ? oneyer_logo_first_char( $title ) : mb_substr( $title, 0, 1, 'UTF-8' );
+		if ( '' === $icon ) {
+			$icon = '·';
+		}
+
+		$output .= '<a class="d-link' . ( $is_cur ? ' on' : '' ) . '" href="' . esc_url( $item->url ) . '">'
+			. '<span class="d-ic" style="background:linear-gradient(135deg,' . esc_attr( $color ) . ')">' . esc_html( $icon ) . '</span>'
+			. '<span class="d-t">' . esc_html( $title ) . '</span>'
+			. '<svg class="d-ar" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>';
 	}
 
 	public function end_el( &$output, $item, $depth = 0, $args = null ) {
@@ -706,13 +723,25 @@ function oneyer_drawer_menu() {
 		return;
 	}
 
-	$cats = get_categories( array( 'number' => 6, 'hide_empty' => true ) );
+	/* 兜底：顶层分类（图标=分类渐变+字符，计数=真实文章数） */
+	$cats = get_categories( array( 'number' => 8, 'hide_empty' => true ) );
 	foreach ( $cats as $cat ) {
-		echo '<a class="d-link" href="' . esc_url( get_category_link( $cat ) ) . '">' . esc_html( $cat->name ) . ' <span class="n">' . esc_html( number_format_i18n( $cat->count ) ) . '</span></a>';
+		$grad = oneyer_gradients()[ oneyer_grad_class( $cat->slug ) ];
+		$link = is_category() && get_queried_object_id() === (int) $cat->term_id ? ' on' : '';
+		echo '<a class="d-link' . $link . '" href="' . esc_url( get_category_link( $cat ) ) . '">'
+			. '<span class="d-ic" style="background:linear-gradient(135deg,' . esc_attr( $grad ) . ')">' . esc_html( oneyer_glyph( $cat->name, $cat->slug ) ) . '</span>'
+			. '<span class="d-t">' . esc_html( $cat->name ) . '</span>'
+			. '<span class="d-n">' . esc_html( number_format_i18n( $cat->count ) ) . '</span>'
+			. '<svg class="d-ar" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>'
+			. '</a>';
 	}
 	$page = oneyer_template_page_url( 'page-templates/page-about.php' );
 	if ( $page ) {
-		echo '<a class="d-link" href="' . esc_url( $page ) . '">关于本站</a>';
+		echo '<a class="d-link" href="' . esc_url( $page ) . '">'
+			. '<span class="d-ic" style="background:linear-gradient(135deg,#409eff,#2f6fd6)">关</span>'
+			. '<span class="d-t">关于本站</span>'
+			. '<svg class="d-ar" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>'
+			. '</a>';
 	}
 }
 
