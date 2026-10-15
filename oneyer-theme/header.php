@@ -45,15 +45,20 @@
   <div class="d-search-wrap"><?php oneyer_search_form( true ); ?></div>
   <?php oneyer_drawer_menu(); ?>
 
-  <?php $oy_dstats = oneyer_stats(); if ( $oy_dstats ) : ?>
-  <div class="d-stats" aria-label="站点统计">
-    <?php foreach ( $oy_dstats as $oy_ds ) : ?>
-    <div class="d-stat"><b><?php echo esc_html( number_format_i18n( $oy_ds[1] ) ); ?><?php echo ! empty( $oy_ds[2] ) ? '<i>+</i>' : ''; ?></b><span><?php echo esc_html( $oy_ds[0] ); ?></span></div>
-    <?php endforeach; ?>
-  </div>
-  <?php endif; ?>
-
   <?php
+  /* 快捷页卡：仅显示菜单中未出现的页面入口（按 URL 去重，避免与菜单重复） */
+  $oy_menu_urls = array();
+  $oy_locs      = get_nav_menu_locations();
+  foreach ( array( 'drawer', 'primary' ) as $oy_loc ) {
+    if ( ! empty( $oy_locs[ $oy_loc ] ) ) {
+      $oy_items = wp_get_nav_menu_items( $oy_locs[ $oy_loc ] );
+      if ( $oy_items ) {
+        foreach ( $oy_items as $oy_it ) {
+          $oy_menu_urls[] = rtrim( strtolower( $oy_it->url ), '/' );
+        }
+      }
+    }
+  }
   $oy_dquick = array(
     'page-templates/page-about.php'            => array( '关于本站', 'M4 11a8 8 0 0 1 16 0' ),
     'page-templates/page-archive-timeline.php' => array( '文章归档', 'M4 19V6a2 2 0 0 1 2-2h5v15H4ZM13 19V6a2 2 0 0 1 2-2h5v15h-7Z' ),
@@ -62,18 +67,26 @@
   $oy_dquick_items = array();
   foreach ( $oy_dquick as $oy_tpl => $oy_cfg ) {
     $oy_u = oneyer_template_page_url( $oy_tpl );
-    if ( $oy_u ) {
-      $oy_dquick_items[] = array( $oy_u, $oy_cfg[0], $oy_cfg[1] );
-    }
+    if ( ! $oy_u ) continue;
+    if ( in_array( rtrim( strtolower( $oy_u ), '/' ), $oy_menu_urls, true ) ) continue;
+    $oy_dquick_items[] = array( $oy_u, $oy_cfg[0], $oy_cfg[1] );
   }
-  if ( $oy_dquick_items ) :
   ?>
+  <?php if ( $oy_dquick_items ) : ?>
   <div class="d-quick" aria-label="快捷页面">
-    <?php foreach ( $oy_dquick_items as $oy_i => $oy_q ) : ?>
+    <?php foreach ( $oy_dquick_items as $oy_q ) : ?>
     <a class="d-qcard" href="<?php echo esc_url( $oy_q[0] ); ?>">
       <span class="d-qic"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="<?php echo esc_attr( $oy_q[2] ); ?>"/></svg></span>
       <span class="d-qt"><?php echo esc_html( $oy_q[1] ); ?></span>
     </a>
+    <?php endforeach; ?>
+  </div>
+  <?php endif; ?>
+
+  <?php $oy_dstats = oneyer_stats(); if ( $oy_dstats ) : ?>
+  <div class="d-stats" aria-label="站点统计">
+    <?php foreach ( $oy_dstats as $oy_ds ) : ?>
+    <div class="d-stat"><b><?php echo esc_html( number_format_i18n( $oy_ds[1] ) ); ?><?php echo ! empty( $oy_ds[2] ) ? '<i>+</i>' : ''; ?></b><span><?php echo esc_html( $oy_ds[0] ); ?></span></div>
     <?php endforeach; ?>
   </div>
   <?php endif; ?>
