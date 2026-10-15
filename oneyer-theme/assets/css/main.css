@@ -1396,6 +1396,21 @@ img.avatar,.avatar img{border-radius:13px;display:block}
 /* 无 JS 时不渲染任何 pjax 元素 */
 html:not(.js) .pjax-bar{display:none}
 
+/* ── 滚动条：JS 可用时隐藏原生，自绘主题化指示条（自动显隐 + 可拖拽） ──
+ * 无 JS 时 html.js 不存在 → 原生滚动条照常显示（渐进增强）。 */
+html.js{scrollbar-width:none}
+html.js::-webkit-scrollbar{width:0;height:0;display:none}
+.oy-scrollbar{position:fixed;top:0;right:0;width:14px;height:100vh;z-index:390;
+  opacity:0;transition:opacity .3s ease;pointer-events:none}
+.oy-scrollbar.is-visible{opacity:1;pointer-events:auto}
+.oy-scrollbar__thumb{position:absolute;right:2px;width:5px;height:40px;border-radius:4px;
+  background:linear-gradient(180deg,#5aabff,#2f6fd6);opacity:.55;
+  transition:width .18s ease,opacity .18s ease;cursor:grab}
+.oy-scrollbar:hover .oy-scrollbar__thumb,.oy-scrollbar.is-dragging .oy-scrollbar__thumb{width:9px;opacity:1}
+.oy-scrollbar.is-dragging .oy-scrollbar__thumb{background:var(--blue,#409eff);cursor:grabbing}
+@media (hover:none){.oy-scrollbar{display:none}}
+@media print{.oy-scrollbar{display:none}}
+
 /* 减少动态效果偏好 */
 @media (prefers-reduced-motion: reduce){
   html{scroll-behavior:auto}

@@ -38,6 +38,7 @@
 			}
 			if (nav) nav.classList.toggle('scrolled', h.scrollTop > 10);
 			if (backtop) backtop.classList.toggle('show', h.scrollTop > 600);
+			if (window.ONEYER_SB) window.ONEYER_SB.update();
 		});
 	}
 	window.addEventListener('scroll', onScroll, { passive: true });
@@ -356,6 +357,71 @@
 		}
 		if (window.ONEYER_HOMECAT && window.ONEYER_HOMECAT.mount) window.ONEYER_HOMECAT.mount(ctx);
 	}
+
+	/* ── 自绘滚动指示条：自动显隐 + 拖拽定位（无 JS 回退原生滚动条） ──
+	 * 仅桌面精确指针环境显示（触屏由 CSS 隐藏，原生 overlay 已有）。 */
+	(function () {
+		if (!window.matchMedia || window.matchMedia('(hover: none)').matches) return;
+		var root = document.createElement('div');
+		root.className = 'oy-scrollbar';
+		root.setAttribute('aria-hidden', 'true');
+		var thumb = document.createElement('div');
+		thumb.className = 'oy-scrollbar__thumb';
+		root.appendChild(thumb);
+		document.body.appendChild(root);
+
+		var hideTimer = null, dragging = false, dragY = 0, dragTop = 0;
+
+		function metrics() {
+			var h = document.documentElement;
+			var max = h.scrollHeight - h.clientHeight;
+			return { h: h, max: max, ratio: max > 0 ? h.scrollTop / max : 0 };
+		}
+		function layout() {
+			var m = metrics();
+			var trackH = root.clientHeight || window.innerHeight;
+			var th = Math.max(40, Math.round(trackH * (m.h.clientHeight / Math.max(1, m.h.scrollHeight))));
+			thumb.style.height = th + 'px';
+			thumb.style.top = Math.round((trackH - th) * m.ratio) + 'px';
+		}
+		function show() {
+			layout();
+			root.classList.add('is-visible');
+			clearTimeout(hideTimer);
+			hideTimer = setTimeout(function () {
+				if (!dragging) root.classList.remove('is-visible');
+			}, 900);
+		}
+		root.addEventListener('pointerdown', function (e) {
+			if (e.target !== thumb) return; // 点空白区域不响应，保持滚动条惯常行为
+			dragging = true;
+			root.classList.add('is-dragging', 'is-visible');
+			dragY = e.clientY;
+			dragTop = (document.documentElement.scrollHeight - document.documentElement.clientHeight) * metrics().ratio;
+			root.setPointerCapture && root.setPointerCapture(e.pointerId);
+			e.preventDefault();
+		});
+		document.addEventListener('pointermove', function (e) {
+			if (!dragging) return;
+			var m = metrics();
+			var trackH = root.clientHeight || window.innerHeight;
+			var th = parseFloat(thumb.style.height) || 40;
+			var dy = e.clientY - dragY;
+			var top = Math.max(0, Math.min(trackH - th, dragTop + dy));
+			thumb.style.top = Math.round(top) + 'px';
+			m.h.scrollTop = (trackH - th) > 0 ? (top / (trackH - th)) * m.max : 0;
+		});
+		document.addEventListener('pointerup', function () {
+			if (!dragging) return;
+			dragging = false;
+			root.classList.remove('is-dragging');
+			show(); // 重新进入「停止后淡出」计时
+		});
+		window.addEventListener('resize', layout);
+
+		window.ONEYER_SB = { update: show, layout: layout };
+	})();
+
 
 	/* ═══════════════ 导出与首挂 ═══════════════ */
 	/* init 供 pjax.js 转场后重挂视图组件；closeDrawer 供抽屉内 pjax 点击联动（M4）。 */
