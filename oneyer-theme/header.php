@@ -14,6 +14,7 @@
 <body <?php body_class( 'no-js' ); ?>>
 <?php wp_body_open(); ?>
 
+<a class="skip-link screen-reader-text" href="#oneyer-main">跳到主要内容</a>
 <div class="progress" id="progress"></div>
 <div class="pjax-bar" aria-hidden="true"></div>
 

@@ -425,6 +425,10 @@
 
 	/* ═══════════════ 导出与首挂 ═══════════════ */
 	/* init 供 pjax.js 转场后重挂视图组件；closeDrawer 供抽屉内 pjax 点击联动（M4）。 */
+	/* skip-link 目标可聚焦（键盘跳转主内容） */
+	var mainEl = document.getElementById('oneyer-main');
+	if (mainEl && !mainEl.hasAttribute('tabindex')) mainEl.setAttribute('tabindex', '-1');
+
 	window.ONEYER_UI = {
 		init: function (ctx) { mountAll(ctx || document); },
 		closeDrawer: closeDrawer

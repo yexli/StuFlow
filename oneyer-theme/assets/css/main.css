@@ -1477,3 +1477,20 @@ html.js::-webkit-scrollbar{width:0;height:0;display:none}
 @media (prefers-reduced-motion: reduce){
   .drawer.open .d-link,.drawer.open .d-stats,.drawer.open .d-quick{animation:none}
 }
+
+/* ── 细节打磨 ── */
+::selection{background:rgba(64,158,255,.22)}
+/* 键盘焦点统一可见（鼠标点击不出现轮廓） */
+a:focus-visible,button:focus-visible,[tabindex]:focus-visible{outline:2px solid var(--blue);outline-offset:2px;border-radius:4px}
+/* 评论正文里的行内代码（此前无样式） */
+.cmt .c-body code:not(pre code){font-family:var(--font-mono);font-size:.86em;color:var(--inline-code);
+  background:var(--inline-code-bg);padding:2px 7px;border-radius:6px;margin:0 2px}
+/* 抽屉滚动条主题化 + 关闭按钮热区 */
+.drawer{scrollbar-width:thin;scrollbar-color:rgba(64,158,255,.35) transparent}
+.drawer::-webkit-scrollbar{width:4px}
+.drawer::-webkit-scrollbar-thumb{background:rgba(64,158,255,.35);border-radius:2px}
+.drawer .d-close{width:30px;height:30px;border-radius:8px;display:grid;place-items:center;transition:all .15s}
+.drawer .d-close:hover{background:var(--bg);color:var(--ink)}
+.drawer .d-link:focus-visible{outline:2px solid var(--blue);outline-offset:-2px;border-radius:11px}
+/* 主区被 skip-link/pjax 聚焦时不显示轮廓 */
+#oneyer-main:focus{outline:none}

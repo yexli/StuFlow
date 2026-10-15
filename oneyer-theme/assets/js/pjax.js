@@ -41,20 +41,24 @@
 
 	/* ── 加载条 ───────────────────────────── */
 	var bar = document.querySelector('.pjax-bar');
+	var scrollBar = document.querySelector('.progress'); // 阅读进度条：pjax 转场期间让位，避免双条叠加
 	function barStart() {
 		if (!bar) return;
 		bar.classList.add('is-loading');
 		bar.style.width = '80%';
+		if (scrollBar) scrollBar.style.opacity = '0';
 	}
 	function barEnd() {
 		if (!bar) return;
 		bar.style.width = '100%';
 		setTimeout(function () { bar.classList.remove('is-loading'); bar.style.width = '0'; }, 200);
+		if (scrollBar) setTimeout(function () { scrollBar.style.opacity = ''; }, 220);
 	}
 	function barFail() {
 		if (!bar) return;
 		bar.classList.remove('is-loading');
 		bar.style.width = '0';
+		if (scrollBar) scrollBar.style.opacity = '';
 	}
 
 	/* ── 抓取与解析 ───────────────────────── */
@@ -151,6 +155,9 @@
 			}
 			/* 重新初始化主题组件（main.js 提供） */
 			if (window.ONEYER_UI && window.ONEYER_UI.init) window.ONEYER_UI.init(doc.main);
+			/* 无障碍：转场后把焦点移入新主区（不引起滚动） */
+			doc.main.setAttribute('tabindex', '-1');
+			doc.main.focus({ preventScroll: true });
 			/* 埋点钩子（无则安静跳过） */
 			if (window.oneyerPjaxComplete) window.oneyerPjaxComplete(url);
 		};
