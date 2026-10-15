@@ -141,11 +141,12 @@ button{font-family:inherit}
 /* 移动端抽屉 */
 .drawer-mask{position:fixed;inset:0;background:rgba(15,23,42,.4);z-index:198;opacity:0;visibility:hidden;transition:all .25s;backdrop-filter:blur(2px)}
 .drawer{
-  position:fixed;top:0;right:-290px;width:280px;height:100vh;background:#fff;z-index:199;
-  transition:right .28s cubic-bezier(.2,.8,.3,1);padding:22px 18px;overflow-y:auto;
-  box-shadow:-12px 0 40px rgba(31,60,105,.15);
+  position:fixed;top:0;right:0;width:min(320px,88vw);height:100vh;height:100dvh;background:#fff;z-index:199;
+  transform:translateX(110%);transition:transform .28s cubic-bezier(.2,.8,.3,1);
+  padding:calc(20px + env(safe-area-inset-top,0px)) 18px calc(24px + env(safe-area-inset-bottom,0px));
+  overflow-y:auto;box-shadow:-12px 0 40px rgba(31,60,105,.15);
 }
-.drawer.open{right:0}
+.drawer.open{transform:translateX(0)}
 .drawer-mask.open{opacity:1;visibility:visible}
 .drawer .d-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}
 .drawer .d-head .logo{font-size:19px}
@@ -1494,3 +1495,22 @@ a:focus-visible,button:focus-visible,[tabindex]:focus-visible{outline:2px solid 
 .drawer .d-link:focus-visible{outline:2px solid var(--blue);outline-offset:-2px;border-radius:11px}
 /* 主区被 skip-link/pjax 聚焦时不显示轮廓 */
 #oneyer-main:focus{outline:none}
+
+/* 抽屉机型适配：小屏收紧内边距与字号，避免拥挤 */
+@media (max-width:360px){
+  .drawer{padding-left:14px;padding-right:14px}
+  .drawer .d-stats{gap:4px}
+  .drawer .d-stat{padding:7px 2px;border-radius:8px}
+  .drawer .d-stat b{font-size:13.5px}
+  .drawer .d-stat span{font-size:10px}
+  .drawer .d-link{padding:10px}
+  .drawer .d-t{font-size:13.5px}
+  .drawer .d-quick{gap:6px}
+  .drawer .d-qcard{padding:10px;font-size:12.5px}
+}
+/* 大屏手机：略增呼吸感 */
+@media (min-width:400px){
+  .drawer{padding-left:20px;padding-right:20px}
+  .drawer .d-stats{gap:8px}
+  .drawer .d-stat{padding:9px 4px}
+}
